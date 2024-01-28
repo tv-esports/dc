@@ -1,0 +1,9 @@
+.env
+node_modules
+dist
+yarn-error.log
+.env.example
+migrate.ts
+INFO.todo
+PLEASE_READ_ME!!!!.mdx
+owner.json

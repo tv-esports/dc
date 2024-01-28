@@ -1,0 +1,26 @@
+version: "3.7"
+services:
+    bot:
+        build:
+            context: ./
+        env_file:
+            - .env
+        ports:
+            - "3000:3000"
+        restart: always
+        depends_on:
+            - mongo
+        volumes:
+           - "/etc/timezone:/etc/timezone:ro"
+           - "/etc/localtime:/etc/localtime:ro"
+    mongo:
+        image: mongo
+        environment:
+          MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER}
+          MONGO_INITDB_ROOT_PASSWORD: ${DATABASE_PASS}
+        ports:
+          - "27017:27017"
+        volumes:
+          - mongo_data:/data/db
+volumes:
+    mongo_data:
