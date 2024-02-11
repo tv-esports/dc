@@ -10,14 +10,14 @@ import { announceWinners } from "../jobs/lottery/announceWinners";
 
 import Logger from "../util";
 
-import { k } from "env";
+import { envguard } from "env";
 
 export default class ReadyEvent extends BaseEvent {
   constructor() {
     super("ready");
   }
   async run(client: ExtendedClient) {
-    k({ strict: ["MONGODB_TOKEN"] });
+    envguard({ strict: ["MONGODB_TOKEN"] });
 
     Logger.scan(`${client.user.tag} is now online.`);
 

@@ -20,12 +20,18 @@ dependencies:
   concurrently:
     specifier: ^7.6.0
     version: 7.6.0
+  dedent:
+    specifier: ^1.5.1
+    version: 1.5.1
   discord.js:
     specifier: ^14.13.0
     version: 14.13.0
   dotenv:
     specifier: ^10.0.0
     version: 10.0.0
+  env:
+    specifier: github:tv-esports/env
+    version: github.com/tv-esports/env/e2144563c54107f268623b0868f387eb468ca845(date-fns@2.30.0)
   glob:
     specifier: ^7.2.3
     version: 7.2.3
@@ -2246,6 +2252,11 @@ packages:
   /color-name@1.1.4:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
 
+  /colors@1.4.0:
+    resolution: {integrity: sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==}
+    engines: {node: '>=0.1.90'}
+    dev: false
+
   /common-tags@1.8.2:
     resolution: {integrity: sha512-gk/Z852D2Wtb//0I+kRFNKKE9dIIVirjoqPoA1wJU+XePVXZfGeBpk45+A1rKO4Q43prqWBNY/MiIeRLbPWUaA==}
     engines: {node: '>=4.0.0'}
@@ -2305,6 +2316,14 @@ packages:
       which: 2.0.2
     dev: true
 
+  /date-fns-tz@2.0.0(date-fns@2.30.0):
+    resolution: {integrity: sha512-OAtcLdB9vxSXTWHdT8b398ARImVwQMyjfYGkKD2zaGpHseG2UPHbHjXELReErZFxWdSLph3c2zOaaTyHfOhERQ==}
+    peerDependencies:
+      date-fns: '>=2.0.0'
+    dependencies:
+      date-fns: 2.30.0
+    dev: false
+
   /date-fns@2.30.0:
     resolution: {integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==}
     engines: {node: '>=0.11'}
@@ -2342,7 +2361,6 @@ packages:
     peerDependenciesMeta:
       babel-plugin-macros:
         optional: true
-    dev: true
 
   /deepmerge@4.3.1:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
@@ -2393,6 +2411,11 @@ packages:
   /dotenv@10.0.0:
     resolution: {integrity: sha512-rlBi9d8jpv9Sf1klPjNfFAuWDjKLwTIJJ/VxtoTwIR6hnZxcEOQCZg2oIL3MWBYw5GpUDKOEnND7LXTbIpQ03Q==}
     engines: {node: '>=10'}
+    dev: false
+
+  /dotenv@16.4.2:
+    resolution: {integrity: sha512-rZSSFxke7d9nYQ5NeMIwp5PP+f8wXgKNljpOb7KtH6SKW1cEqcXAz9VSJYVLKe7Jhup/gUYOkaeSVyK8GJ+nBg==}
+    engines: {node: '>=12'}
     dev: false
 
   /electron-to-chromium@1.4.576:
@@ -4014,3 +4037,16 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
     dev: true
+
+  github.com/tv-esports/env/e2144563c54107f268623b0868f387eb468ca845(date-fns@2.30.0):
+    resolution: {tarball: https://codeload.github.com/tv-esports/env/tar.gz/e2144563c54107f268623b0868f387eb468ca845}
+    id: github.com/tv-esports/env/e2144563c54107f268623b0868f387eb468ca845
+    name: env
+    version: 1.0.0
+    dependencies:
+      colors: 1.4.0
+      date-fns-tz: 2.0.0(date-fns@2.30.0)
+      dotenv: 16.4.2
+    transitivePeerDependencies:
+      - date-fns
+    dev: false
