@@ -1,5 +1,4 @@
 import { ActivityType } from "discord.js";
-import Logger from "../logger";
 import { ExtendedClient } from "../structures/Client";
 import { BaseEvent } from "../structures/Event";
 import { lootDrop } from "../jobs/lootDrop";
@@ -9,17 +8,18 @@ import { announceLottery } from "../jobs/lottery/announceLottery";
 import { closeLottery } from "../jobs/lottery/closeLottery";
 import { announceWinners } from "../jobs/lottery/announceWinners";
 
+import Logger from "../util";
+
 import { k } from "env";
 
-const logger = new Logger();
 export default class ReadyEvent extends BaseEvent {
   constructor() {
     super("ready");
   }
   async run(client: ExtendedClient) {
-    k({ strict: ["MONGODB_TOKEN"]})
+    k({ strict: ["MONGODB_TOKEN"] });
 
-    logger.success(`Logged in as ${client.user.tag}`);
+    Logger.scan(`${client.user.tag} is now online.`);
 
     client.user.setActivity({
       name: "over Team Void",

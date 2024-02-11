@@ -2,7 +2,7 @@ import * as Discord from "discord.js";
 import { CommandType } from "../typings/Command";
 import { RegisterCommandOptions } from "../typings/Client";
 
-import Logger from "../logger";
+import Logger from "../util";
 import { connect } from "../database";
 
 import { glob } from "glob";
@@ -12,8 +12,6 @@ const globPromise = promisify(glob);
 import { lstat, readdir } from "fs/promises";
 import { config } from "dotenv";
 import path from "path";
-
-const logger = new Logger();
 
 config();
 export class ExtendedClient extends Discord.Client {
@@ -36,13 +34,13 @@ export class ExtendedClient extends Discord.Client {
     if (guildId) {
       const guild = await this.guilds.fetch(guildId);
       await guild.commands.set(commands);
-      logger.info(`Registered (/) to ${guild.name}`);
+      Logger.scan(`Registered (/) to ${guild.name}`);
       // global commands
     } else {
       this.guilds.cache.forEach(async (guild) => {
         await guild.commands.set(commands);
       });
-      logger.warn(`Registering commands to all guilds`);
+      Logger.scan(`Registering commands to all guilds`);
     }
   }
   async registerModules() {

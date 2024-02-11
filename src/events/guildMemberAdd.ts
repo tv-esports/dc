@@ -1,18 +1,17 @@
 import { GuildMember, TextChannel } from "discord.js";
-import Logger from "../logger";
 import { ExtendedClient } from "../structures/Client";
 import { BaseEvent } from "../structures/Event";
 
 import GuildModel from "../models/guild/guild";
 
-const logger = new Logger();
+import Logger from "../util";
 
 export default class MessageEvent extends BaseEvent {
     constructor() {
         super("guildMemberAdd");
     }
     async run(client: ExtendedClient, member: GuildMember) {
-        logger.info(`Member joined: ${member.user.username}`);
+        Logger.scan(`Member joined: ${member.user.username}`);
 
         const guildQuery = await GuildModel.findOne({ guildID: member.guild.id });
 
