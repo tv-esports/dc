@@ -19,12 +19,12 @@ export async function victim() {
     cron.schedule("0 3 * * *", async () => {
         const usersAbove15 = await UserModel.find({
             guildID: channel.guild.id,
-            xp_level: { $gt: 15 } // Users above level 15
+            xp_level: { $gt: 25 } // Users above level 25 can be a victim
         });
 
         const usersBetween5And15 = await UserModel.find({
             guildID: channel.guild.id,
-            xp_level: { $gt: 5, $lte: 20 } // Users above level 5 and at or below level 15
+            xp_level: { $gt: 10, $lte: 20 } // Users above level 10 and at or below level 15
         });
         
         if (usersAbove15.length === 0 || usersBetween5And15.length === 0) return;

@@ -4,9 +4,6 @@ import { BaseEvent } from "../structures/Event";
 import { lootDrop } from "../jobs/lootDrop";
 import { announceWeekend } from "../jobs/announceWeekend";
 import { victim } from "../jobs/victim";
-import { announceLottery } from "../jobs/lottery/announceLottery";
-import { closeLottery } from "../jobs/lottery/closeLottery";
-import { announceWinners } from "../jobs/lottery/announceWinners";
 
 import Logger from "../util";
 
@@ -30,9 +27,9 @@ export default class ReadyEvent extends BaseEvent {
     // cron jobs
     lootDrop();
     announceWeekend();
-    // disable reaper: victim();
-    announceLottery();
-    closeLottery();
-    announceWinners();
+    victim();
+    //announceLottery();
+    //closeLottery();
+    //announceWinners();
   }
 }
