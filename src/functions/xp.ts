@@ -1,4 +1,4 @@
-import * as crypto from 'crypto';
+import crypto from 'crypto';
 import { client } from '..';
 
 export interface LevelRole {
@@ -64,9 +64,9 @@ export function randomGif() {
   return randomGifsForLevelUp[scaledNumber];
 }
 
-export function progressBar(currentXP: number, maxXp: number) {
+export function progressBar(currentXP: number, xpRequired: number) {
   const progressBarLength = 20; // Adjust the length of the progress bar
-  const progress = Math.floor((currentXP / maxXp) * progressBarLength);
+  const progress = Math.floor((currentXP / xpRequired) * progressBarLength);
   const remaining = progressBarLength - progress;
 
   const validProgress = Math.min(Math.max(progress, 0), progressBarLength); // Ensure progress is within range

@@ -7,6 +7,8 @@ import PrestigeModel from "../../models/prestige/prestige";
 
 import { calculateNextPrestigeLevel, calculateXPForNextLevel, generatePrestigeLeaderboard, progressBar } from "../../functions/xp";
 
+import dedent from 'dedent';
+
 export default new Command({
     name: "xp",
     description: "Get infos about the XP system",
@@ -51,16 +53,21 @@ export default new Command({
                 }
             ],
         },
-        // {
-        //     name: "prestige-leaderboard",
-        //     description: "The prestige leaderboard",
-        //     type: ApplicationCommandOptionType.Subcommand,
-        // },
+        {
+            name: "prestige-leaderboard",
+            description: "The prestige leaderboard",
+            type: ApplicationCommandOptionType.Subcommand,
+        },
         {
             name: "settings",
             description: "Check the XP settings",
             type: ApplicationCommandOptionType.Subcommand,
         },
+        {
+            name: "stats",
+            description: "Get some stats about the bot",
+            type: ApplicationCommandOptionType.Subcommand,
+        }
     ],
     run: async ({ interaction, client }) => {
         if (interaction.options.getSubcommand() === "level") {
@@ -185,20 +192,20 @@ export default new Command({
             });
         }
 
-        // if (interaction.options.getSubcommand() === "prestige-leaderboard") {
-        //     const topFiveUsers = await PrestigeModel.aggregate([
-        //         { $sort: { prestige_level: -1, prestige_xp: -1 } }, // Sort by prestige level first, then by prestige xp
-        //         { $limit: 5 },
-        //     ]);
+        if (interaction.options.getSubcommand() === "prestige-leaderboard") {
+            const topFiveUsers = await PrestigeModel.aggregate([
+                { $sort: { prestige_level: -1, prestige_xp: -1 } }, // Sort by prestige level first, then by prestige xp
+                { $limit: 5 },
+            ]);
 
-        //     if (topFiveUsers.length === 0) return interaction.reply({ content: "There is no valid data for this leaderboard.", ephemeral: true });
+            if (topFiveUsers.length === 0) return interaction.reply({ content: "There is no valid data for this leaderboard.", ephemeral: true });
 
-        //     const prestigeLeaderboard = await generatePrestigeLeaderboard(topFiveUsers, 5);
-        //     const prestigeEmbed = new EmbedBuilder().setTitle("🏴‍☠️ Prestige Leaderboard").setDescription(`${prestigeLeaderboard}`).setColor("NotQuiteBlack").setTimestamp();
-        //     await interaction.reply({
-        //         embeds: [prestigeEmbed],
-        //     });
-        // }
+            const prestigeLeaderboard = await generatePrestigeLeaderboard(topFiveUsers, 5);
+            const prestigeEmbed = new EmbedBuilder().setTitle("🏴‍☠️ Prestige Leaderboard").setDescription(`${prestigeLeaderboard}`).setColor("NotQuiteBlack").setFooter({ text: "Showing: Top five"}).setTimestamp();
+            await interaction.reply({
+                embeds: [prestigeEmbed],
+            });
+        }
 
         if (interaction.options.getSubcommand() === "settings") {
             const guildQuery = await GuildModel.findOne({ guildID: interaction.guildId });
@@ -226,6 +233,44 @@ export default new Command({
 
                 .setColor("Random")
                 .setFooter({ text: `Requested by ${interaction.user.username}`, iconURL: `${interaction.user.avatarURL()}` })
+
+            return await interaction.reply({
+                embeds: [embed],
+            });
+        }
+
+        if (interaction.options.getSubcommand() === "stats") {
+            const userCount = await UserModel.countDocuments();
+            const prestigeCount = await PrestigeModel.countDocuments();
+
+            const totalAmountOfXP = (await UserModel.aggregate([{ $group: { _id: null, total: { $sum: "$xp_points" } } }]))[0]?.total;
+
+            const rootServerExpireDateIn45Days = new Date();
+            rootServerExpireDateIn45Days.setDate(rootServerExpireDateIn45Days.getDate() + 45);
+            const formattedExpireDate = rootServerExpireDateIn45Days.toLocaleDateString('de-DE');
+
+            const amountOfTypeScriptFiles = 56;
+            const amountOfLinesOfCodeAcrossAllFiles = 7250;
+
+            const stats = dedent`
+                Total XP in database: ${totalAmountOfXP}
+                Users in database: ${userCount}
+                Users in prestige: ${prestigeCount}
+                Root Server Expire Date: ${formattedExpireDate}
+                Amount of files used: ${amountOfTypeScriptFiles}
+                Lines of Code: ${amountOfLinesOfCodeAcrossAllFiles}
+            `;
+
+            const embed = new EmbedBuilder()
+                .setTitle("TV-Bot Stats")
+                .setDescription(dedent`
+                
+                \`\`\`diff
+                ${stats}
+                \`\`\`
+                `)
+                .setColor("Random")
+                .setFooter({ text: `Requested by ${interaction.user.username}`, iconURL: `${interaction.user.avatarURL()}` });
 
             return await interaction.reply({
                 embeds: [embed],
