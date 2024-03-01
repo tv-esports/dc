@@ -2,14 +2,11 @@ import { EmbedBuilder, Message } from "discord.js";
 import { ExtendedClient } from "../structures/Client";
 import { BaseEvent } from "../structures/Event";
 
-import GuildModel from "../models/guild/guild";
 import UserModel from "../models/user/user";
-
-import { generateRandomXP, prestigeLevelRoles, randomGif } from "../functions/xp";
-import { levelRoles } from "../functions/xp";
+import GuildModel from "../models/guild/guild";
 import PrestigeModel from "../models/prestige/prestige";
 
-const cooldowns = new Map();
+import { generateRandomXP, prestigeLevelRoles, randomGif, levelRoles } from "../functions/xp";
 
 export default class MessageEvent extends BaseEvent {
   constructor() {
@@ -32,10 +29,11 @@ export default class MessageEvent extends BaseEvent {
     if (guildQuery.ignored_xp_channels.includes(message.channel.id)) return;
     if (guildQuery.ignored_xp_roles.some((role) => message.member?.roles.cache.has(role))) return;
 
+    const cooldowns = new Map();
+    let cooldownTime = 10000;
+
     // return if the user is already level 50
     if (userQuery?.xp_level === 50) return;
-
-    let cooldownTime = 10000; // Cooldown in milliseconds (10 seconds)
 
     if (isPrestige) cooldownTime = 1000 * 60 * 60 * 3;
 
