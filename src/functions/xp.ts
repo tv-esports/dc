@@ -69,12 +69,27 @@ export function progressBar(currentXP: number, xpRequired: number) {
   const progress = Math.floor((currentXP / xpRequired) * progressBarLength);
   const remaining = progressBarLength - progress;
 
-  const validProgress = Math.min(Math.max(progress, 0), progressBarLength); // Ensure progress is within range
-  const validRemaining = Math.min(Math.max(remaining, 0), progressBarLength); // Ensure remaining is within range
+  const validProgress = Math.min(Math.max(progress, 0), progressBarLength);
+  const validRemaining = Math.min(Math.max(remaining, 0), progressBarLength);
 
-  const progressBarString = "▓".repeat(validProgress) + "░".repeat(validRemaining); // Using Unicode blocks for progress
+  const progressBarString = generateColoredProgressBar(validProgress, validRemaining); 
 
   return `${progressBarString}`;
+}
+
+function generateColoredProgressBar(progress: number, remaining: number) {
+  const colorMap = ['█', '░']; 
+  const progressBarArray = [];
+
+  for (let i = 0; i < progress; i++) {
+    progressBarArray.push(colorMap[0]); 
+  }
+
+  for (let i = 0; i < remaining; i++) {
+    progressBarArray.push(colorMap[1]); 
+  }
+
+  return progressBarArray.join('');
 }
 
 export function calculateXPForNextLevel(currentLevel: number) {
