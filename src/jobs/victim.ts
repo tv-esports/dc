@@ -43,7 +43,7 @@ export async function victim() {
             const victimIndex = Math.floor(Math.random() * usersAbove15.length);
             const victim = usersAbove15[victimIndex];
 
-            const newVictimLevel = Math.max(victim.xp_level - 2, 1); // Decrease level by 2, minimum level is 1
+            const newVictimLevel = Math.max(victim.xp_level - 2); // Decrease level by 2
             const victimRole = levelRoles.find((role) => role.level === newVictimLevel);
             const victimXP = victimRole ? victimRole.xpRequired : 0; // Reset XP to the minimum of the new level
 
@@ -51,7 +51,7 @@ export async function victim() {
             const beneficiaryIndex = Math.floor(Math.random() * usersBetween5And15.length);
             const beneficiary = usersBetween5And15[beneficiaryIndex];
 
-            const newBeneficiaryLevel = Math.min(beneficiary.xp_level + 2, 50); // Increase level by 2, maximum level is 50
+            const newBeneficiaryLevel = Math.min(beneficiary.xp_level + 2); // Increase level by 2
             const beneficiaryRole = levelRoles.find((role) => role.level === newBeneficiaryLevel);
             const beneficiaryXP = beneficiaryRole ? beneficiaryRole.xpRequired : 0; // Set XP to the role requirement
 
