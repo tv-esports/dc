@@ -74,7 +74,7 @@ export default new Command({
             } else if (endColor === yellow) {
                 colorDesc = "Yellow";
                 XP_TO_GIVE = 40;
-                resultMessage = "You won 30 XP!";
+                resultMessage = "You won 40 XP!";
             }
 
             // Assign XP to the user and update their role if necessary

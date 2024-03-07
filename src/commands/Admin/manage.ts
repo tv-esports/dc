@@ -383,7 +383,8 @@ export default new Command({
             const lootRow = new ActionRowBuilder<ButtonBuilder>()
                 .addComponents(xpDropButton, widButton)
 
-            const dropMessage = await interaction.reply({ embeds: [embed], components: [lootRow] });
+            const dropMessage = await interaction.channel.send({ embeds: [embed], components: [lootRow] });
+            await interaction.reply({ content: `XP has been dropped!`, ephemeral: true });
 
             if (!dropQuery) {
                 await DropModel.create({
