@@ -26,20 +26,37 @@ export function generateRandomXP(min: number, max: number): number {
 }
 
 const randomGifsForLevelUp: string[] = [
-  "https://media1.giphy.com/media/Jk4Sucdz1oGd2/200.webp?cid=790b7611hnl255ccm0xikwdg02nley7jrcj9a6kfgm5xrkla&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media1.giphy.com/media/Y9pvW54NNPRacOKg2D/200.webp?cid=790b7611hnl255ccm0xikwdg02nley7jrcj9a6kfgm5xrkla&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media2.giphy.com/media/PUBxelwT57jsQ/200.webp?cid=790b7611f8nogfkplwm0lhsw6hpwqabh830y4pjvjdfknx8v&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media1.giphy.com/media/1Zt3z4uEBPZQY/200.webp?cid=ecf05e47vxvhec5p8azrohepfpjdxbpebjggu3jmtc05h57v&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media0.giphy.com/media/455cAbMyB0cs3RyA3O/200.webp?cid=ecf05e47gbv5ekubu6ic7zrltjb7jj5zqx7ffn8xenkcpep4&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media4.giphy.com/media/sHytgXD2vlNVC/200.webp?cid=ecf05e47gbv5ekubu6ic7zrltjb7jj5zqx7ffn8xenkcpep4&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media0.giphy.com/media/xT0GqGUyFPeYYmYD5K/200.webp?cid=ecf05e47fspaze1qmkkmhw4ngybo221hfxtyofo1b0muan6k&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media1.giphy.com/media/HysKXGid5rAAbEemFL/200.webp?cid=790b7611cuc38puy653jnwzbwj23wxwwl8scia57o6naqh7q&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media3.giphy.com/media/rV3zQ64Fh0TpC/200.webp?cid=ecf05e47fgzq2p2793wkwkvdd6acm0wiwzhszakyv3k4hp3b&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media1.giphy.com/media/vFa3GwYAAAZyM/giphy.webp?cid=ecf05e47fgzq2p2793wkwkvdd6acm0wiwzhszakyv3k4hp3b&ep=v1_gifs_search&rid=giphy.webp&ct=g",
-  "https://media4.giphy.com/media/87aJUHNmJ71Ix6pzRr/200.webp?cid=ecf05e47qmwwnwsix8z8cakaf4bb4lta8ulvo4qm0gs3eu6f&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media0.giphy.com/media/Ub4kWebdWWJP2/200.webp?cid=ecf05e479blhemqzyq2bzwpdarkry267lyicy1reauk5bgtl&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media3.giphy.com/media/uH7MRQvoBXWg0/200.webp?cid=ecf05e479ue100aip7w79lqmkwx0fde9xf7df38v065jr3z8&ep=v1_gifs_search&rid=200.webp&ct=g",
-  "https://media4.giphy.com/media/3o6ZtmxW1RTRGn0qzK/200.webp?cid=ecf05e479ue100aip7w79lqmkwx0fde9xf7df38v065jr3z8&ep=v1_gifs_search&rid=200.webp&ct=g"
+  "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExOGxoa3RvNm0zZnZxbG45OHR3YTMwMXM4d3VlMng2bnVzZ2YzY29rbyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/o75ajIFH0QnQC3nCeD/200.webp",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExbHZtZm5icHFxbmNlNWVjMXRwYmkzMm5neHUwbm1ycTd5ajM3MGhkcSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/BrxCPbnWV7pvqiffdi/giphy.gif",
+  "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExNjFpZGN6MTU2Z3NyYmRubzBrZzc3MXBnem4xb2YzbXpyY2Q4YW1saSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/dFZAA2mUFWFC35mzQy/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXU5cWQyaXIwajgwdzdiaDBrc2VmOTBvN3o2bWxrZXc4anZuM2phMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/EHDBBTY9mUxwtHMzOB/giphy.gif",
+  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExaHVmaTdmams3bXY3dHRobXJiM290Nm8yNHlmZm5paHAybGo4bGpuYiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/Jir7AUookJHIVb5aYM/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMW1sdjFxZm02bndjOHdneGlzdnpua2dyNWx6YTZzbHJ3ZjhlajVubSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l4HodBpDmoMA5p9bG/giphy.gif",
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExYXBldGh4MzU3M3RuZHA4cmN1OTBraHY0bWlxb3RuejEybnhhcWg0aSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/11uArCoB4fkRcQ/giphy.gif",
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExc3h4aG81dGg2MzIwNjVnczIwcmZjNmpxczhqMGFtZm12MGVycjBheCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3JNILOuA7SuDU3X5nk/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMTZkbjh5d3FmM2E2NTN2ajJiOXVvNnJocjJjcjQxejczYTFodnhzNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/TEFplLVRDMWBi/giphy.gif",
+  "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExN2VleTd4NmljMTJuc3RpMnJ3dGJ6N3BlMTg4cHdrenRkYTd4ZnVtbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26u4exk4zsAqPcq08/giphy.gif",
+  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMWIwM21qZzg0bGRhNWM4N21tdTM5ZjY5b3dqZnUwbDQwbno2cDhoNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6nuiJjOOQBBn2/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMjNld3JmcWNldHpla2xlOGR0MWlpNnY2cWlraHY0MTVkbDBqMHJsbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/K3raI0cXTkzNC/giphy.gif",
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExbzkzeHMwZjJrZ253NzY2N3o2d3VxZWd2N3hzd2E3d3RrNXRpaXZ2ZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xT9KVGaO2v0xzfIPMA/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXd0eW4xMDF0N2pldzFlbXFnbzV6enZrM3J3dnExbDBnNDg1MXl3eCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/klxOW1G2uiVYg8axes/giphy.gif",
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXBrc3JzODBrc2M3ZWozanBvMzhtNnQydjNhaTk1bmEwdDBucnNhaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3FfYEVMs8hErBx4Okn/giphy.gif",
+  "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeG9oZzNoNnBxNzdtOXVtd3Z6dnoxNWxka2ltZmFjcnoyaHppeHk3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/rxtcfIprmkBA1g6kiL/giphy.gif",
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExcXZtbXZocDFldnlkeHhoeGVmejZleWZjdjZmaXdjMndlbnF5a2h1aSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/5PKQrJbDKMnxUeqgvT/giphy.gif",
+  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExaHBheng3YnZ3bmkzem5xeDRtNjU5cm9la3NmaHZhbTh4aHgzZHg3OSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/giRL7f2SiARXE0YO3y/giphy.gif",
+  "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3N4M2xzYzg0YnVpaGdpNW4wcWU5ZXgzOXdwZ3Y2dDNhMWdldXVvayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7buil9QoX91N17Ow/giphy.gif",
+  "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZzh3MG9yM2o1MDJmNGpvY2FyZ3I5N3NidnVqOGVmdDE2M2lxM3FwdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIPt3IEJbcqkff7a/giphy.gif",
+  "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExemhzOWl3YTdkbnkyM3Z3cm9yeWpjaTNkbzZ4ZjI0em95d2VyaW5idyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2be3wzOOEh7rGTmGLo/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ2V4c2ZienIxa2V5cDE3cGpwanQ5NzkxcWd5bGJxbWd0cjBqMGpreiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oz8xynJ88hmIdCCOI/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExdHAyMzh6bG8ycngxNmlmdXoyajg1dzlucnFwdnVsNGR4dzZkbTYyMyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l2JI9I2xDKW5To2uA/giphy.gif",
+  "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHBqbXM3NnhpcXZscmFjNW1uMW04b3N5dTk4enN2bzQ1MW85djZzbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6AWP1xQ8PHz2TprBvq/giphy.gif",
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdzR4eHBtMGg2ZXlmMG9vdnE2amxreWgycThmbDRka25leGJ6Z3Q1ciZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/j08FAAf3VWaTssKtWt/giphy.gif",
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMHJrM3N4eHZyc3Vqbm1ldDR3cmN5cWgzdHZ5MWxvYXBpZXU1eXptNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MuyRCJzb18cIIVyuQT/giphy.gif",
+  "https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExejc2Y2R5OG5zdTU3bmk1eWM0cXRqMW1tM2ZrdDVoZjc1aXM4em14bSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/AL0XsYU0pkFTq/giphy.gif",
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExOWI2MDVneDc3d3p1M3VkbDl6Nnc1aHVhODUwZjd5djFuNHF2ZHh5eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/i157x7wHuLJvtTslX6/giphy.gif",
+  "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExY3FwZ2x5cmtzaTF4ajJsaWJ4dGVybG9iZjF0cWUwOWJyOGhpc3NvaSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/eKvlvkPEzPHihkIobL/giphy.gif",
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmRndGUyejM0NGtwZTlmNGN2NjF5YXg2cnF6azFocWhldWp0NDAyMCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6vBm2wIoc1bdDj1eQT/giphy.gif",
+  "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExdjZ3ZW9tOXB6ZW1vN2RvMHd2aWRrc2Q5aWU1N3AwbWttdzhveG1sNiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/DpN931EVIzcEo/giphy.gif"
 ]
 
 export function randomGif() {
@@ -74,13 +91,11 @@ function generateEmojiProgressBar(progress: number, remaining: number) {
 
   const progressBarArray = [];
 
+  // Add the start emoji
+  progressBarArray.push(emojiMap.fillStart);
+
   // Calculate the progress within the full length of the bar
   const progressWithinBar = Math.min(progress, progressBarLength);
-
-  // If progress exceeds the full length, add the start emoji
-  if (progress > progressBarLength) {
-    progressBarArray.push(emojiMap.fillStart);
-  }
 
   for (let i = 0; i < progressWithinBar; i++) {
     progressBarArray.push(emojiMap.fillBar);

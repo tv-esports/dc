@@ -44,14 +44,14 @@ export default new Command({
             name: "leaderboard",
             description: "The servers leaderboard",
             type: ApplicationCommandOptionType.Subcommand,
-            options: [
-                {
-                    name: "top",
-                    description: "How many should be displayed (max 15)",
-                    type: ApplicationCommandOptionType.Number,
-                    required: false
-                }
-            ],
+            // options: [
+            //     {
+            //         name: "top",
+            //         description: "How many should be displayed (max 15)",
+            //         type: ApplicationCommandOptionType.Number,
+            //         required: false
+            //     }
+            // ],
         },
         {
             name: "prestige-leaderboard",
@@ -133,38 +133,18 @@ export default new Command({
 
             let leaderboard = "";
 
-            // Fetch top prestige users
-            const topPrestigeUsers = await PrestigeModel.aggregate([
-                { $sort: { prestige_level: -1, prestige_xp: -1 } }, // Sort by Prestige level first, then by XP points
-                { $limit: 3 }, // Limit to the top 3 prestige users
-            ]);
-
-            for (let i = 0; i < topPrestigeUsers.length; i++) {
-                const userTag = (await client.users.fetch(topPrestigeUsers[i].userID))?.tag;
-                const rank = i === 0 ? "🏴‍☠️" : ""; // Display the pirate flag for the top user
-
-                const currentXP = topPrestigeUsers[i].prestige_xp;
-                const currentLevel = topPrestigeUsers[i].prestige_level;
-                const xpToNextLevel = calculateNextPrestigeLevel(currentLevel); // Function to calculate XP needed for next level
-
-                leaderboard += `${rank} ${userTag}\n` +
-                    `  **Prestige**: ${currentLevel} | **Prestige XP**: ${currentXP} xp\n` +
-                    `  ${progressBar(currentXP, xpToNextLevel)}\n` +
-                    "\n"; // Separate leaderboard entries
-            }
-
-            // Fetch and append regular users' leaderboard
             const topRegularUsers = await UserModel.aggregate([
-                { $sort: { xp_level: -1, xp_points: -1 } }, // Sort by XP level first, then by XP points
-                { $limit: limit }, // Limit the number of regular users displayed
+                { $sort: { xp_level: -1, xp_points: -1 } },
+                { $limit: limit },
             ]);
 
             for (let i = 0; i < topRegularUsers.length; i++) {
                 const userTag = (await client.users.fetch(topRegularUsers[i].userID))?.tag;
                 let emoji;
+
                 switch (i) {
                     case 0:
-                        emoji = "🥇"; // Emojis for ranking
+                        emoji = "🥇";
                         break;
                     case 1:
                         emoji = "🥈";
@@ -178,19 +158,20 @@ export default new Command({
 
                 const currentXP = topRegularUsers[i].xp_points;
                 const currentLevel = topRegularUsers[i].xp_level;
-                const xpToNextLevel = calculateXPForNextLevel(currentLevel); // Function to calculate XP needed for next level
+                const xpToNextLevel = calculateXPForNextLevel(currentLevel);
 
                 leaderboard += `${emoji} **${userTag}**\n` +
                     `**Level:** ${currentLevel} | **XP:** ${currentXP} xp\n` +
                     `${progressBar(currentXP, xpToNextLevel)}\n` +
-                    "\n"; // Separate leaderboard entries
+                    "\n";
             }
 
-            const embed = new EmbedBuilder().setTitle("Team Void Leaderboard").setDescription(leaderboard);
+            const embed = new EmbedBuilder().setTitle("Team Void Leaderboard").setDescription(leaderboard).setFooter({ text: "Showing: Top " + limit });
             await interaction.reply({
                 embeds: [embed],
             });
         }
+
 
         if (interaction.options.getSubcommand() === "prestige-leaderboard") {
             const topFiveUsers = await PrestigeModel.aggregate([
@@ -201,7 +182,7 @@ export default new Command({
             if (topFiveUsers.length === 0) return interaction.reply({ content: "There is no valid data for this leaderboard.", ephemeral: true });
 
             const prestigeLeaderboard = await generatePrestigeLeaderboard(topFiveUsers, 5);
-            const prestigeEmbed = new EmbedBuilder().setTitle("🏴‍☠️ Prestige Leaderboard").setDescription(`${prestigeLeaderboard}`).setColor("NotQuiteBlack").setFooter({ text: "Showing: Top five"}).setTimestamp();
+            const prestigeEmbed = new EmbedBuilder().setTitle("🏴‍☠️ Prestige Leaderboard").setDescription(`${prestigeLeaderboard}`).setColor("NotQuiteBlack").setFooter({ text: "Showing: Top five" }).setTimestamp();
             await interaction.reply({
                 embeds: [prestigeEmbed],
             });

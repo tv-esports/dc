@@ -69,7 +69,7 @@ export default class MessageEvent extends BaseEvent {
             const levelUpEmbed = new EmbedBuilder()
               .setColor("Random")
               .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\``)
-              .setImage(`${randomGif()}`)
+            //  .setImage(`${randomGif()}`)
               .setTimestamp();
             message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
           }
@@ -78,7 +78,7 @@ export default class MessageEvent extends BaseEvent {
             const levelUpEmbed = new EmbedBuilder()
               .setColor("Random")
               .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\` and received the \`${role.name}\` role`)
-              .setImage(`${randomGif()}`)
+            //  .setImage(`${randomGif()}`)
               .setTimestamp();
             message.member?.roles.add(role);
             message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
