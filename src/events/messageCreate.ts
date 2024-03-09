@@ -29,16 +29,18 @@ export default class MessageEvent extends BaseEvent {
     if (guildQuery.ignored_xp_channels.includes(message.channel.id)) return;
     if (guildQuery.ignored_xp_roles.some((role) => message.member?.roles.cache.has(role))) return;
 
+    // return if the user is already level 50
+    if (userQuery?.xp_level === 50) return;
+    if (isPrestige && prestigeQuery?.prestige_level === 10) return;
+
     const cooldowns = new Map();
     let cooldownTime = 10000;
 
-    // return if the user is already level 50
-    if (userQuery?.xp_level === 50) return;
-
-    if (isPrestige) cooldownTime = 1000 * 60 * 60 * 3;
-
     const currentTime = Date.now();
     const userCooldown = cooldowns.get(message.author.id);
+
+    const prestigeUpdatedAt = prestigeQuery?.updated_at;
+    const isPrestigeUpdated = prestigeUpdatedAt ? (currentTime - prestigeUpdatedAt.getTime()) > (1000 * 60 * 60 * 3) : false;
 
     const today = new Date();
     const dayOfWeek = today.getDay(); // Returns the day of the week (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
@@ -49,8 +51,6 @@ export default class MessageEvent extends BaseEvent {
     // Calculate XP based on whether it's the weekend or not or the user is in prestige mode (prestige users get 0.5x xp)
     //                                  weekend * 2                  not weekend
     let XP_TO_GIVE = isWeekend ? generateRandomXP(4, 8) : generateRandomXP(2, 4);
-
-    if (isPrestige) XP_TO_GIVE = generateRandomXP(3, 5);
 
     // User is on cooldown, ignore message
     if (userCooldown && (currentTime - userCooldown) < cooldownTime) return;
@@ -69,7 +69,7 @@ export default class MessageEvent extends BaseEvent {
             const levelUpEmbed = new EmbedBuilder()
               .setColor("Random")
               .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\``)
-            //  .setImage(`${randomGif()}`)
+              //  .setImage(`${randomGif()}`)
               .setTimestamp();
             message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
           }
@@ -78,7 +78,7 @@ export default class MessageEvent extends BaseEvent {
             const levelUpEmbed = new EmbedBuilder()
               .setColor("Random")
               .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\` and received the \`${role.name}\` role`)
-            //  .setImage(`${randomGif()}`)
+              //  .setImage(`${randomGif()}`)
               .setTimestamp();
             message.member?.roles.add(role);
             message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
@@ -88,15 +88,17 @@ export default class MessageEvent extends BaseEvent {
         }
       }
 
-      await UserModel.findOneAndUpdate(
+      return await UserModel.findOneAndUpdate(
         { userID: message.author.id },
         { xp_points: newXP, xp_level: userLevel }
       );
     }
 
     // prestige earnings
-    else if (isPrestige) {
-      const newXP = prestigeQuery?.prestige_xp + XP_TO_GIVE;
+    if (isPrestige && isPrestigeUpdated) {
+      const prestigeEarnings = generateRandomXP(1, 3);
+
+      const newXP = prestigeQuery?.prestige_xp + prestigeEarnings;
       let prestigeLevel = prestigeQuery?.prestige_level;
 
       for (const prestigeLevelRole of prestigeLevelRoles) {
@@ -110,7 +112,7 @@ export default class MessageEvent extends BaseEvent {
 
       await PrestigeModel.findOneAndUpdate(
         { userID: message.author.id },
-        { prestige_xp: newXP, prestige_level: prestigeLevel }
+        { prestige_xp: newXP, prestige_level: prestigeLevel, updated_at: new Date() }
       );
     }
 
