@@ -227,15 +227,12 @@ export default new Command({
             const totalAmountOfXP = (await UserModel.aggregate([{ $group: { _id: null, total: { $sum: "$xp_points" } } }]))[0]?.total;
             const totalAmountOfLevel = (await UserModel.aggregate([{ $group: { _id: null, total: { $sum: "$xp_level" } } }]))[0]?.total;
 
-            const rootServerExpireDateIn45Days = new Date();
-            rootServerExpireDateIn45Days.setDate(rootServerExpireDateIn45Days.getDate() + 45);
-            const formattedExpireDate = rootServerExpireDateIn45Days.toLocaleDateString('de-DE');
             const stats = dedent`
                 Total levels in database: ${totalAmountOfLevel}
                 Total XP in database: ${totalAmountOfXP}
                 Users in database: ${userCount}
                 Users in prestige: ${prestigeCount}
-                Root Server Expire Date: ${formattedExpireDate}
+                Root Server Expire Date: 04/10/2024
             `;
 
             const embed = new EmbedBuilder()

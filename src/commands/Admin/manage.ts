@@ -113,6 +113,11 @@ export default new Command({
                     required: true
                 }
             ]
+        },
+        {
+            name: "view-blacklist",
+            description: "View the blacklisted users",
+            type: ApplicationCommandOptionType.Subcommand
         }
     ],
     run: async ({ interaction, client }) => {
@@ -268,6 +273,9 @@ export default new Command({
             const guildQuery = await GuildModel.findOne({ guildID: interaction.guild.id });
             const user = interaction.options.getString("id");
 
+            const format = user.match(/\d{17,19}/);
+            if (!format) return interaction.reply({ content: `Invalid user ID!`, ephemeral: true });
+
             if (guildQuery) {
                 if (guildQuery.blacklisted_xp_users.includes(user)) {
                     return interaction.reply({ content: `This user is already blacklisted!`, ephemeral: true });
@@ -397,7 +405,22 @@ export default new Command({
             } else {
                 await DropModel.findOneAndUpdate({ guildID: interaction.guild.id }, { dropMessage: dropMessage.id, amount: amount });
             }
+        }
 
+        if (interaction.options.getSubcommand() === "view-blacklist") {
+            const guildQuery = await GuildModel.findOne({ guildID: interaction.guild.id });
+            if (!guildQuery || guildQuery.blacklisted_xp_users.length === 0) return interaction.reply({ content: `Yikes, no data found!`, ephemeral: true });
+
+            const blacklistedUsers = guildQuery.blacklisted_xp_users;
+
+            const embed = new EmbedBuilder()
+                .setTitle(`Blacklisted Users`)
+                .setDescription(`Here are the blacklisted users:\n\n${blacklistedUsers.join("\n")}`)
+                .setColor("Red")
+                .setFooter({ text: `Use: https://discord.id/ to check their username` })
+                .setTimestamp();
+
+            return interaction.reply({ embeds: [embed], ephemeral: true });
         }
     },
 });
