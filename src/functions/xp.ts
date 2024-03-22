@@ -197,7 +197,7 @@ export const prestigeLevelRoles: PrestigeLevelRole[] = [
   { prestige_level: 10, xpRequired: 15000 },
 ]
 
-export async function generatePrestigeLeaderboard(topUsers: string | any[], limit: any) {
+export async function generatePrestigeLeaderboard(topUsers: string | any[], limit: number) {
   let prestigeLeaderboard = "```css\n"; // Using code block for a different visual style
 
   for (let i = 0; i < topUsers.length; i++) {

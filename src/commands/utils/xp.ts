@@ -103,12 +103,12 @@ export default new Command({
 
         if (interaction.options.getSubcommand() === "prestige-level") {
             const user = interaction.options.getUser("user") || interaction.user;
-            const prestigeQuery = await PrestigeModel.findOne({ userID: user.id });
+            const prestigeQuery = await UserModel.findOne({ userID: user.id });
 
-            if (!prestigeQuery) return interaction.reply({ content: "This user is not in the prestige database", ephemeral: true });
+            if (!prestigeQuery.prestige.is_prestige) return interaction.reply({ content: "This user is not in the prestige database", ephemeral: true });
 
-            const userRank = prestigeQuery.prestige_level;
-            const userXP = prestigeQuery.prestige_xp;
+            const userRank = prestigeQuery.prestige.prestige_level
+            const userXP = prestigeQuery.prestige.prestige_xp;
             const xpToNextLevel = calculateNextPrestigeLevel(userRank); // Function to calculate XP needed for next level
 
             const levelInfo = `Level: ${userRank} | XP: ${userXP} / ${xpToNextLevel} XP`;
@@ -172,20 +172,21 @@ export default new Command({
             });
         }
 
-
         if (interaction.options.getSubcommand() === "prestige-leaderboard") {
-            const topFiveUsers = await PrestigeModel.aggregate([
-                { $sort: { prestige_level: -1, prestige_xp: -1 } }, // Sort by prestige level first, then by prestige xp
-                { $limit: 5 },
-            ]);
+            // const topFiveUsers = await UserModel.aggregate([
+            //     { $match: { "prestige.is_prestige": true } },
+            //     { $sort: { "prestige.prestige_level": -1, "prestige.prestige_xp": -1 } },
+            //     { $limit: 5 },
+            // ]);
 
-            if (topFiveUsers.length === 0) return interaction.reply({ content: "There is no valid data for this leaderboard.", ephemeral: true });
+            // if (topFiveUsers.length === 0) return interaction.reply({ content: "There is no valid data for this leaderboard.", ephemeral: true });
 
-            const prestigeLeaderboard = await generatePrestigeLeaderboard(topFiveUsers, 5);
-            const prestigeEmbed = new EmbedBuilder().setTitle("🏴‍☠️ Prestige Leaderboard").setDescription(`${prestigeLeaderboard}`).setColor("NotQuiteBlack").setFooter({ text: "Showing: Top five" }).setTimestamp();
-            await interaction.reply({
-                embeds: [prestigeEmbed],
-            });
+            // const prestigeLeaderboard = await generatePrestigeLeaderboard(topFiveUsers, 5);
+            // const prestigeEmbed = new EmbedBuilder().setTitle("🏴‍☠️ Prestige Leaderboard").setDescription(`${prestigeLeaderboard}`).setColor("NotQuiteBlack").setFooter({ text: "Showing: Top five" }).setTimestamp();
+            // await interaction.reply({
+            //     embeds: [prestigeEmbed],
+            // });
+            interaction.reply({ content: "This command is currently disabled", ephemeral: true });
         }
 
         if (interaction.options.getSubcommand() === "settings") {

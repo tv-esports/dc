@@ -4,7 +4,6 @@ import { BaseEvent } from "../structures/Event";
 
 import UserModel from "../models/user/user";
 import GuildModel from "../models/guild/guild";
-import PrestigeModel from "../models/prestige/prestige";
 
 import { generateRandomXP, prestigeLevelRoles, randomGif, levelRoles } from "../functions/xp";
 
@@ -18,10 +17,28 @@ export default class MessageEvent extends BaseEvent {
     if (!message.guild) return;
 
     const guildQuery = await GuildModel.findOne({ guildID: message.guild.id });
-    const userQuery = await UserModel.findOne({ userID: message.author.id });
-    const prestigeQuery = await PrestigeModel.findOne({ userID: message.author.id });
+    let userQuery = await UserModel.findOne({ userID: message.author.id });
 
-    const isPrestige = prestigeQuery ? true : false;
+    // If userQuery is null (user not found in database), create a new user
+    if (!userQuery) {
+      userQuery = await UserModel.create({
+        userID: message.author.id,
+        xp_level: 0,
+        xp_points: 0,
+        warnings: 0,
+        prestige: {
+          is_prestige: false,
+          prestige_level: 0,
+          prestige_xp: 0,
+          prestige_insertedAt: new Date(),
+          prestige_updatedAt: new Date(),
+        },
+        inserted_at: new Date(),
+        updated_at: new Date(),
+      });
+    }
+
+    const isPrestige = userQuery.prestige?.is_prestige || false;
 
     if (!guildQuery) return;
     if (guildQuery.xp_enabled === false) return;
@@ -30,8 +47,8 @@ export default class MessageEvent extends BaseEvent {
     if (guildQuery.ignored_xp_roles.some((role) => message.member?.roles.cache.has(role))) return;
 
     // return if the user is already level 50
-    if (userQuery?.xp_level === 50) return;
-    if (isPrestige && prestigeQuery?.prestige_level === 10) return;
+    if (userQuery.xp_level === 50) return;
+    if (isPrestige && userQuery.prestige?.prestige_level === 10) return;
 
     const cooldowns = new Map();
     let cooldownTime = 10000;
@@ -39,7 +56,7 @@ export default class MessageEvent extends BaseEvent {
     const currentTime = Date.now();
     const userCooldown = cooldowns.get(message.author.id);
 
-    const prestigeUpdatedAt = prestigeQuery?.updated_at;
+    const prestigeUpdatedAt = userQuery.prestige?.prestige_updatedAt;
     const isPrestigeUpdated = prestigeUpdatedAt ? (currentTime - prestigeUpdatedAt.getTime()) > (1000 * 60 * 60 * 3) : false;
 
     const today = new Date();
@@ -57,7 +74,7 @@ export default class MessageEvent extends BaseEvent {
 
     cooldowns.set(message.author.id, currentTime);
 
-    if (userQuery && !isPrestige) {
+    if (!isPrestige) {
       const newXP = userQuery.xp_points + XP_TO_GIVE;
       let userLevel = userQuery.xp_level;
 
@@ -69,7 +86,6 @@ export default class MessageEvent extends BaseEvent {
             const levelUpEmbed = new EmbedBuilder()
               .setColor("Random")
               .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\``)
-              //  .setImage(`${randomGif()}`)
               .setTimestamp();
             message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
           }
@@ -78,7 +94,6 @@ export default class MessageEvent extends BaseEvent {
             const levelUpEmbed = new EmbedBuilder()
               .setColor("Random")
               .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\` and received the \`${role.name}\` role`)
-              //  .setImage(`${randomGif()}`)
               .setTimestamp();
             message.member?.roles.add(role);
             message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
@@ -88,7 +103,7 @@ export default class MessageEvent extends BaseEvent {
         }
       }
 
-      return await UserModel.findOneAndUpdate(
+      await UserModel.findOneAndUpdate(
         { userID: message.author.id },
         { xp_points: newXP, xp_level: userLevel }
       );
@@ -98,8 +113,8 @@ export default class MessageEvent extends BaseEvent {
     if (isPrestige && isPrestigeUpdated) {
       const prestigeEarnings = generateRandomXP(1, 3);
 
-      const newXP = prestigeQuery?.prestige_xp + prestigeEarnings;
-      let prestigeLevel = prestigeQuery?.prestige_level;
+      const newXP = userQuery.prestige?.prestige_xp + prestigeEarnings;
+      let prestigeLevel = userQuery.prestige?.prestige_level;
 
       for (const prestigeLevelRole of prestigeLevelRoles) {
         if (newXP >= prestigeLevelRole.xpRequired && prestigeLevelRole.prestige_level > prestigeLevel) {
@@ -110,21 +125,10 @@ export default class MessageEvent extends BaseEvent {
         }
       }
 
-      await PrestigeModel.findOneAndUpdate(
+      await UserModel.findOneAndUpdate(
         { userID: message.author.id },
-        { prestige_xp: newXP, prestige_level: prestigeLevel, updated_at: new Date() }
+        { "prestige.prestige_xp": newXP, "prestige.prestige_level": prestigeLevel, "prestige.prestige_updatedAt": new Date() }
       );
-    }
-
-    if (!userQuery) {
-      await UserModel.create({
-        userID: message.author.id,
-        xp_level: 0,
-        xp_points: XP_TO_GIVE,
-        warnings: 0,
-        inserted_at: new Date(),
-        updated_at: new Date(),
-      });
     }
   }
 }

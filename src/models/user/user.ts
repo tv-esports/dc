@@ -25,6 +25,10 @@ class User {
   @prop()
   warnings: number; // Array<{reason: string, moderator: string, date: Date}>;
 
+  // prestige system
+  @prop({ default: { is_prestige: false, prestige_level: 0, prestige_xp: 0, prestige_insertedAt: 0, prestige_updatedAt: 0 } })
+  prestige: { is_prestige: boolean, prestige_level: number, prestige_xp: number, prestige_insertedAt: Date, prestige_updatedAt: Date };
+
   @prop()
   inserted_at: Date;
 
