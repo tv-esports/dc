@@ -5,7 +5,6 @@ import { ExtendedButtonInteraction } from "../../typings/Command";
 
 import UserModel from "../../models/user/user";
 import GuildModel from "../../models/guild/guild";
-import PrestigeModel from "../../models/prestige/prestige";
 import LotteryModel from "../../models/lottery/lottery";
 
 import dedent from 'dedent';
@@ -54,14 +53,13 @@ export default class InteractionCreateEvent extends BaseEvent {
 
                 const latestLotteryQuery = await LotteryModel.findOne({ opened: true }).sort({ inserted_at: -1 });
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guild.id });
-                const prestigeQuery = await PrestigeModel.findOne({ userID: interaction.user.id });
                 const userXPQuery = await UserModel.findOne({ userID: interaction.user.id });
 
                 const numbersBetFormat = validateLotteryNumbers(numbersBet);
                 // if format is wrong
                 if (!numbersBetFormat) return interaction.reply({ content: "Invalid numbers format! Enter three numbers between 1 and 100 separated with a comma.\nExample: \`22, 36, 99\`", ephemeral: true });
                 // if user is prestige
-                if (prestigeQuery) return interaction.reply({ content: "Prestige users can't enter the lottery.", ephemeral: true });
+                if (userXPQuery.prestige.is_prestige) return interaction.reply({ content: "Prestige users can't enter the lottery.", ephemeral: true });
                 // if user has not enough XP or havent sent any message yet
                 if (!userXPQuery || userXPQuery.xp_points < rawXPBet) return interaction.reply({ content: "You don't have enough XP to enter the lottery.", ephemeral: true });
                 // if guild has no data, disabled xp or user is blacklisted

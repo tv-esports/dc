@@ -4,7 +4,6 @@ import { levelRoles } from "../../functions/xp";
 
 import UserModel from "../../models/user/user";
 import GuildModel from "../../models/guild/guild";
-import PrestigeModel from "../../models/prestige/prestige";
 
 export default new Command({
     name: "wof",
@@ -13,11 +12,10 @@ export default new Command({
     run: async ({ interaction, client }) => {
         const userQuery = await UserModel.findOne({ userID: interaction.user.id });
         const guildQuery = await GuildModel.findOne({ guildID: interaction.guild?.id });
-        const prestigeQuery = await PrestigeModel.findOne({ userID: interaction.user.id });
         if (!userQuery) return interaction.reply({ content: "You are not in the database yet, send messages first!", ephemeral: true });
         if (guildQuery.xp_enabled === false || guildQuery?.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that!", ephemeral: true });
 
-        if (prestigeQuery) return interaction.reply({ content: "You are in prestige mode, you can't use this command!", ephemeral: true });
+        if (userQuery.prestige.is_prestige) return interaction.reply({ content: "You are in prestige mode, you can't use this command!", ephemeral: true });
 
         const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
         if (userQuery.updated_at && userQuery.updated_at > twelveHoursAgo) {

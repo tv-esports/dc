@@ -7,7 +7,6 @@ import { levelRoles, randomGif } from "../../functions/xp";
 
 import GuildModel from "../../models/guild/guild";
 import UserModel from "../../models/user/user";
-import PrestigeModel from "../../models/prestige/prestige";
 
 export default class InteractionCreateEvent extends BaseEvent {
     constructor() {
@@ -26,12 +25,11 @@ export default class InteractionCreateEvent extends BaseEvent {
                 // get the users xp and level, check if he is eligible for the loot drop (not close to level up, not above level 10)
                 const userQuery = await UserModel.findOne({ userID: interaction.user.id });
                 if (!userQuery) return interaction.reply({ content: "You are not in the database, send messages first.", ephemeral: true });
+                if (userQuery.prestige.is_prestige) return interaction.reply({ content: "You are in prestige mode, you can't use this command!", ephemeral: true });
 
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guildId });
                 if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: "The server disabled XPs", ephemeral: true });
 
-                const prestigeQuery = await PrestigeModel.findOne({ userID: interaction.user.id });
-                if (prestigeQuery) return interaction.reply({ content: "You can not do that as a prestige.", ephemeral: true });
 
                 // check if user is blacklisted
                 if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
@@ -131,8 +129,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                 // check if user is blacklisted
                 if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
 
-                const prestigeQuery = await PrestigeModel.findOne({ userID: interaction.user.id });
-                if (prestigeQuery) return interaction.reply({ content: "You can not do that as a prestige.", ephemeral: true });
+                if (userQuery.prestige.is_prestige) return interaction.reply({ content: "You can not do that as a prestige.", ephemeral: true });
 
                 let userLevel = userQuery.xp_level;
                 let usersXP = userQuery.xp_points;

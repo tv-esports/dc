@@ -5,7 +5,6 @@ import { Command } from "../../structures/Command";
 import GuildModel from "../../models/guild/guild";
 import UserModel from "../../models/user/user";
 import DropModel from "../../models/xpdrop/drop";
-import PrestigeModel from "../../models/prestige/prestige";
 
 export default new Command({
     name: "manage",
@@ -365,12 +364,11 @@ export default new Command({
             if (amount >= 15000) return interaction.reply({ content: `You can't drop more than 15000 XP!`, ephemeral: true });
 
             const userQuery = await UserModel.findOne({ userID: interaction.user.id });
-            const prestigeQuery = await PrestigeModel.findOne({ userID: interaction.user.id });
             const dropQuery = await DropModel.findOne({ guildID: interaction.guild.id }).sort({ inserted_at: -1 });
             const guildQuery = await GuildModel.findOne({ guildID: interaction.guild.id });
             if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: `XP is not active.`, ephemeral: true });
 
-            if (!userQuery || userQuery.xp_level === 50 || guildQuery.blacklisted_xp_users.includes(interaction.user.id) || prestigeQuery) return interaction.reply({ content: `You can't do that`, ephemeral: true });
+            if (!userQuery || userQuery.xp_level === 50 || guildQuery.blacklisted_xp_users.includes(interaction.user.id) || userQuery.prestige.is_prestige) return interaction.reply({ content: `You can't do that`, ephemeral: true });
 
             const embed = new EmbedBuilder()
                 .setDescription(`${interaction.user} dropped some XP for everyone! 🎉`)

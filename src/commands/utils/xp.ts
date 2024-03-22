@@ -3,7 +3,6 @@ import { Command } from "../../structures/Command";
 
 import UserModel from "../../models/user/user";
 import GuildModel from "../../models/guild/guild";
-import PrestigeModel from "../../models/prestige/prestige";
 
 import { calculateNextPrestigeLevel, calculateXPForNextLevel, generatePrestigeLeaderboard, progressBar } from "../../functions/xp";
 
@@ -223,7 +222,7 @@ export default new Command({
 
         if (interaction.options.getSubcommand() === "stats") {
             const userCount = await UserModel.countDocuments();
-            const prestigeCount = await PrestigeModel.countDocuments();
+            const prestigeCount = await UserModel.countDocuments({ "prestige.is_prestige": true });
 
             const totalAmountOfXP = (await UserModel.aggregate([{ $group: { _id: null, total: { $sum: "$xp_points" } } }]))[0]?.total;
             const totalAmountOfLevel = (await UserModel.aggregate([{ $group: { _id: null, total: { $sum: "$xp_level" } } }]))[0]?.total;
