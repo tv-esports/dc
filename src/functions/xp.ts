@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { client } from '..';
 
-const progressBarLength = 20;
+const progressBarLength = 10;
 
 export interface LevelRole {
   level: number;
