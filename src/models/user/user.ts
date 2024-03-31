@@ -21,6 +21,12 @@ class User {
   @prop()
   xp_points: number;
 
+  @prop()
+  messages_sent: number;
+
+  @prop({ default: [] })
+  badges: Array<{}>;
+
   // warn system
   @prop()
   warnings: number; // Array<{reason: string, moderator: string, date: Date}>;

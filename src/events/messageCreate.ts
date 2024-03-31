@@ -76,6 +76,7 @@ export default class MessageEvent extends BaseEvent {
 
     if (!isPrestige) {
       const newXP = userQuery.xp_points + XP_TO_GIVE;
+      const defaultMessagesSent = userQuery.messages_sent || 0;
       let userLevel = userQuery.xp_level;
 
       for (const levelRole of levelRoles) {
@@ -105,7 +106,7 @@ export default class MessageEvent extends BaseEvent {
 
       await UserModel.findOneAndUpdate(
         { userID: message.author.id },
-        { xp_points: newXP, xp_level: userLevel }
+        { xp_points: newXP, xp_level: userLevel, messages_sent: defaultMessagesSent + 1 }
       );
     }
 

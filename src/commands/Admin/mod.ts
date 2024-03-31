@@ -7,6 +7,7 @@ import config from "../../../owner.json";
 import GuildModel from "../../models/guild/guild";
 
 import { levelRoles } from "../../functions/xp";
+import { convertNameToEmoji } from "../../functions/badge";
 
 export default new Command({
     name: "mod",
@@ -63,6 +64,49 @@ export default new Command({
                     required: true
                 }
             ]
+        },
+        {
+            name: "update-badge",
+            description: "Manage the badges of a user",
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    name: "user",
+                    description: "Select the user",
+                    type: ApplicationCommandOptionType.User,
+                    required: true
+                },
+                {
+                    name: "add",
+                    description: "Add a badge to the user",
+                    type: ApplicationCommandOptionType.String,
+                    choices: [
+                        { name: "Silver", value: "Silver" },
+                        { name: "Krypton", value: "Krypton" },
+                        { name: "Gold", value: "Gold" },
+                        { name: "Carbon", value: "Carbon" },
+                        { name: "Diamond", value: "Diamond" },
+                        { name: "Rubin", value: "Rubin" },
+                        { name: "Sapphire", value: "Sapphire" },
+                    ],
+                    required: false
+                },
+                {
+                    name: "remove",
+                    description: "Remove a badge from the user",
+                    type: ApplicationCommandOptionType.String,
+                    choices: [
+                        { name: "Silver", value: "Silver" },
+                        { name: "Krypton", value: "Krypton" },
+                        { name: "Gold", value: "Gold" },
+                        { name: "Carbon", value: "Carbon" },
+                        { name: "Diamond", value: "Diamond" },
+                        { name: "Rubin", value: "Rubin" },
+                        { name: "Sapphire", value: "Sapphire" },
+                    ],
+                    required: false
+                }
+            ]
         }
     ],
     run: async ({ interaction, client }) => {
@@ -101,7 +145,7 @@ export default new Command({
             const user = interaction.options.getString("id");
 
             const owners = config.owners.includes(interaction.user.id);
-            if(user === interaction.user.id && !owners) return interaction.reply({ content: "You can't reset your own xp.", ephemeral: true });
+            if (user === interaction.user.id && !owners) return interaction.reply({ content: "You can't reset your own xp.", ephemeral: true });
 
             const userQuery = await UserModel.findOne({ userID: user });
             if (!user || !userQuery) return interaction.reply({ content: "This user is not in the database. Let him send a message first.", ephemeral: true });
@@ -150,6 +194,50 @@ export default new Command({
                 .setTimestamp();
 
             await interaction.reply({ content: `${user}`, embeds: [updatedEmbed], ephemeral: false });
+        }
+
+        if (interaction.options.getSubcommand() === "update-badge") {
+            const user = interaction.options.getUser("user");
+            const add = interaction.options.getString("add");
+            const remove = interaction.options.getString("remove");
+
+            const userQuery = await UserModel.findOne({ userID: user.id });
+            if (!userQuery) return interaction.reply({ content: "This user is not in the database. Let him send a message first.", ephemeral: true });
+
+            if (add) {
+                if (userQuery.badges.includes(add)) {
+                    return interaction.reply({ content: "This user already has this badge.", ephemeral: true });
+                }
+
+                userQuery.badges.push(add);
+                await userQuery.save();
+
+                const embed = new EmbedBuilder()
+                    .setTitle(`User Badge Added`)
+                    .setDescription(`${user} has had the badge ${add} added by ${interaction.user}`)
+                    .setColor("Green")
+                    .setFooter({ text: `Congratulations!` })
+                    .setTimestamp();
+
+                await interaction.reply({ content: `${user}`, embeds: [embed], ephemeral: false });
+            }
+
+            if (remove) {
+                if (!userQuery.badges.includes(remove)) {
+                    return interaction.reply({ content: "This user does not have this badge.", ephemeral: true });
+                }
+
+                userQuery.badges = userQuery.badges.filter((badge) => badge !== remove);
+                await userQuery.save();
+
+                const embed = new EmbedBuilder()
+                    .setTitle(`User Badge Removed`)
+                    .setDescription(`${user} has had the badge ${remove} removed by ${interaction.user}`)
+                    .setColor("Red")
+                    .setTimestamp();
+
+                await interaction.reply({ content: `${user}`, embeds: [embed], ephemeral: false });
+            }
         }
     },
 });

@@ -1,18 +1,17 @@
 export = {
-  error: "<:error:924715450036813824>",
-  success: "<:success:924715343774109726>",
+  error: '<:error:924715450036813824>',
+  success: '<:success:924715343774109726>',
+  turnedon: '<:turned_on:924716024039878726>',
+  turnedoff: '<:turned_off:924716075797594143>',
 
-  // Sub Badges
-  saphire: "<:saphire:924717252719312916>",
-  botserver: "<:botserver:926850663143596033>",
-  id: "<:id:926486950985207888>",
-  diamond: "<:diamond:924717127259291648>",
-  platin: "<:platin:924718560029311017> ",
-  carbon: "<:carbon:924726492699705365>",
-  timer: "<:timer:926487195827728384>",
+  // Badges
+  silver: "<:silver:924718416936452177>",
+  krypton: "<:krypton:1224003661349523486>",
   gold: "<:gold:924717358344450058>",
-  gratis: "<:gratis:924718416936452177>",
-  bot: "<:bot:926513402388549683>",
+  carbon: "<:carbon:924717886113734687>", 
+  diamond: "<:diamond:924717127259291648>", 
+  rubin: "<:rubin:1224003663450869800>",
+  sapphire: "<:sapphire:924717252719312916>",
 
   // Bot + Server
   settings: "<:settings:924717621427990528>",
@@ -32,8 +31,6 @@ export = {
   reply: "<:reply:924719399137599539>",
   users: "<:users:924718034013270096>",
   ploading: "<a:loadee:939930541296332851>",
-  off: "<:off:924716075797594143>", // toggled off
-  on: "<:on:924716024039878726>", // toggled on
 
   // Discord Badges
   brilliance: "<:brilliance:924725692531355679>",
