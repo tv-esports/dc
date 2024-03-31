@@ -30,7 +30,6 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guildId });
                 if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: "The server disabled XPs", ephemeral: true });
 
-
                 // check if user is blacklisted
                 if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
 
@@ -38,6 +37,8 @@ export default class InteractionCreateEvent extends BaseEvent {
 
                 const usersXP = userQuery.xp_points;
                 let userLevel = userQuery.xp_level;
+
+                if (userLevel === 50) return interaction.reply({ content: "Can't do that as a level 50.", ephemeral: true });
 
                 const today = new Date().getDay();
                 const checkIfItsSaturdayOrSunday = today === 6 || today === 0;
