@@ -4,7 +4,7 @@ import UserModel from "../../models/user/user";
 
 export default new Command({
     name: "prestige",
-    description: "Signs you up for prestive mode",
+    description: "Signs you up for prestige mode",
     userPermissions: [PermissionFlagsBits.SendMessages],
     run: async ({ interaction, client }) => {
         const userQuery = await UserModel.findOne({ userID: interaction.user.id });
