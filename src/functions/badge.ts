@@ -8,6 +8,8 @@ export const convertNameToEmoji = (name: string) => {
             return "<:gold:924717358344450058>"
         case "Carbon":
             return "<:carbon:924717886113734687>"
+        case "Platin": 
+            return "<:platin:924718560029311017> "
         case "Diamond":
             return "<:diamond:924717127259291648>"
         case "Rubin":
