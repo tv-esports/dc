@@ -232,7 +232,7 @@ export default new Command({
                 Total XP in database: ${totalAmountOfXP}
                 Users in database: ${userCount}
                 Users in prestige: ${prestigeCount}
-                Root Server Expire Date: 04/10/2024
+                Root Server Expire Date: 8/20/2024
             `;
 
             const embed = new EmbedBuilder()

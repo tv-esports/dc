@@ -36,7 +36,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                 }
 
                 const lfgRole = process.env.LFG_ROLE || "1192069881328316436";
-                const lfgChannel = process.env.LFG_CHANNEL || "1192071242166046761";
+                const lfgChannel = process.env.LFG_CHANNEL || "1224430636279009462";
                 const pingLfgRole = interaction.guild.roles.cache.get(lfgRole) as Role;
                 const lfgChannelObj = interaction.guild.channels.cache.get(lfgChannel) as TextChannel;
 
@@ -50,6 +50,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                     .setTitle("Looking for game")
                     .setDescription(`The user ${interaction.user} is looking for a \`${formatQueue}\` game.\nRoles needed: \`${roleInput}\``)
                     .setTimestamp()
+                    .setColor("Random")
                     .setFooter({ iconURL: interaction.user.displayAvatarURL(), text: interaction.user.tag });
 
                 const lfgModelOptions = {
@@ -68,14 +69,14 @@ export default class InteractionCreateEvent extends BaseEvent {
                 await lfgChannelObj.send({ content: `${pingLfgRole}`, embeds: [lfgEmbed] });
                 const channel = await client.channels.fetch(lfgChannel) as TextChannel;
                 const thread = await channel.threads.create({
-                    name: `${interaction.user.username}'s LFG Thread`,
+                    name: `${interaction.user.username}'s Game Thread`,
                     autoArchiveDuration: 60,
                     type: ChannelType.PublicThread,
                     reason: "LFG Thread"
                 });
                 await thread.join();
                 await thread.sendTyping();
-                await thread.send({ content: `${interaction.user} here is your channel for questions` });
+                await thread.send({ content: `${interaction.user} here is your channel for the queue, use it to chat!` });
 
                 await interaction.reply({ content: "Your LFG message has been sent.", ephemeral: true });
                 break;
