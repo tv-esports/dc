@@ -4,7 +4,7 @@ import { Command } from "../../structures/Command";
 import UserModel from "../../models/user/user";
 import GuildModel from "../../models/guild/guild";
 
-import { calculateNextPrestigeLevel, calculateXPForNextLevel, generatePrestigeLeaderboard, progressBar } from "../../functions/xp";
+import { calculateXPForNextLevel, progressBar } from "../../functions/xp";
 
 import dedent from 'dedent';
 
@@ -27,19 +27,6 @@ export default new Command({
             ],
         },
         {
-            name: "prestige-level",
-            description: "View your own prestige level",
-            type: ApplicationCommandOptionType.Subcommand,
-            options: [
-                {
-                    name: "user",
-                    description: "Info of a specific user",
-                    type: ApplicationCommandOptionType.User,
-                    required: false
-                },
-            ],
-        },
-        {
             name: "leaderboard",
             description: "The servers leaderboard",
             type: ApplicationCommandOptionType.Subcommand,
@@ -51,11 +38,6 @@ export default new Command({
             //         required: false
             //     }
             // ],
-        },
-        {
-            name: "prestige-leaderboard",
-            description: "The prestige leaderboard",
-            type: ApplicationCommandOptionType.Subcommand,
         },
         {
             name: "settings",
@@ -95,29 +77,6 @@ export default new Command({
                 .setFooter({ text: `${userRankCheck}` })
 
             return await interaction.reply({
-                embeds: [embed],
-                ephemeral: true
-            });
-        }
-
-        if (interaction.options.getSubcommand() === "prestige-level") {
-            const user = interaction.options.getUser("user") || interaction.user;
-            const prestigeQuery = await UserModel.findOne({ userID: user.id });
-
-            if (!prestigeQuery.prestige.is_prestige) return interaction.reply({ content: "This user is not in the prestige database", ephemeral: true });
-
-            const userRank = prestigeQuery.prestige.prestige_level
-            const userXP = prestigeQuery.prestige.prestige_xp;
-            const xpToNextLevel = calculateNextPrestigeLevel(userRank); // Function to calculate XP needed for next level
-
-            const levelInfo = `Level: ${userRank} | XP: ${userXP} / ${xpToNextLevel} XP`;
-
-            const embed = new EmbedBuilder()
-                .setTitle(`Prestige Level of ${user.username}`)
-                .setDescription(`\`\`\`css\n${levelInfo}\n\`\`\``) // Using code block for a different visual style
-                .setColor("NotQuiteBlack");
-
-            await interaction.reply({
                 embeds: [embed],
                 ephemeral: true
             });
@@ -171,23 +130,6 @@ export default new Command({
             });
         }
 
-        if (interaction.options.getSubcommand() === "prestige-leaderboard") {
-            // const topFiveUsers = await UserModel.aggregate([
-            //     { $match: { "prestige.is_prestige": true } },
-            //     { $sort: { "prestige.prestige_level": -1, "prestige.prestige_xp": -1 } },
-            //     { $limit: 5 },
-            // ]);
-
-            // if (topFiveUsers.length === 0) return interaction.reply({ content: "There is no valid data for this leaderboard.", ephemeral: true });
-
-            // const prestigeLeaderboard = await generatePrestigeLeaderboard(topFiveUsers, 5);
-            // const prestigeEmbed = new EmbedBuilder().setTitle("🏴‍☠️ Prestige Leaderboard").setDescription(`${prestigeLeaderboard}`).setColor("NotQuiteBlack").setFooter({ text: "Showing: Top five" }).setTimestamp();
-            // await interaction.reply({
-            //     embeds: [prestigeEmbed],
-            // });
-            interaction.reply({ content: "This command is currently disabled", ephemeral: true });
-        }
-
         if (interaction.options.getSubcommand() === "settings") {
             const guildQuery = await GuildModel.findOne({ guildID: interaction.guildId });
             if (!guildQuery) return interaction.reply({ content: "This guild is not in the database", ephemeral: true });
@@ -222,7 +164,6 @@ export default new Command({
 
         if (interaction.options.getSubcommand() === "stats") {
             const userCount = await UserModel.countDocuments();
-            const prestigeCount = await UserModel.countDocuments({ "prestige.is_prestige": true });
 
             const totalAmountOfXP = (await UserModel.aggregate([{ $group: { _id: null, total: { $sum: "$xp_points" } } }]))[0]?.total;
             const totalAmountOfLevel = (await UserModel.aggregate([{ $group: { _id: null, total: { $sum: "$xp_level" } } }]))[0]?.total;
@@ -231,7 +172,6 @@ export default new Command({
                 Total levels in database: ${totalAmountOfLevel}
                 Total XP in database: ${totalAmountOfXP}
                 Users in database: ${userCount}
-                Users in prestige: ${prestigeCount}
                 Root Server Expire Date: 8/20/2024
             `;
 

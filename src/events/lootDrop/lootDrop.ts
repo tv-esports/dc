@@ -25,7 +25,6 @@ export default class InteractionCreateEvent extends BaseEvent {
                 // get the users xp and level, check if he is eligible for the loot drop (not close to level up, not above level 10)
                 const userQuery = await UserModel.findOne({ userID: interaction.user.id });
                 if (!userQuery) return interaction.reply({ content: "You are not in the database, send messages first.", ephemeral: true });
-                if (userQuery.prestige.is_prestige) return interaction.reply({ content: "You are in prestige mode, you can't use this command!", ephemeral: true });
 
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guildId });
                 if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: "The server disabled XPs", ephemeral: true });

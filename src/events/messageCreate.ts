@@ -26,13 +26,6 @@ export default class MessageEvent extends BaseEvent {
         xp_level: 0,
         xp_points: 0,
         warnings: 0,
-        prestige: {
-          is_prestige: false,
-          prestige_level: 0,
-          prestige_xp: 0,
-          prestige_insertedAt: new Date(),
-          prestige_updatedAt: new Date(),
-        },
         inserted_at: new Date(),
         updated_at: new Date(),
       });
