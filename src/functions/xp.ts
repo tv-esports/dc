@@ -180,63 +180,54 @@ export const levelRoles: LevelRole[] = [
   { level: 48, xpRequired: 14020, role: '1184213792230490263' },
   { level: 49, xpRequired: 14555, role: '1184213792230490263' },
   { level: 50, xpRequired: 15100, role: '1186953493806845994' },
+  { level: 51, xpRequired: 283475, role: '1186953493806845994' },
+  { level: 52, xpRequired: 299130, role: '1186953493806845994' },
+  { level: 53, xpRequired: 315350, role: '1186953493806845994' },
+  { level: 54, xpRequired: 332145, role: '1186953493806845994' },
+  { level: 55, xpRequired: 349525, role: '1186953493806845994' },
+  { level: 56, xpRequired: 367500, role: '1186953493806845994' },
+  { level: 57, xpRequired: 386080, role: '1186953493806845994' },
+  { level: 58, xpRequired: 405275, role: '1186953493806845994' },
+  { level: 59, xpRequired: 425095, role: '1186953493806845994' },
+  { level: 60, xpRequired: 445550, role: '1186953493806845994' },
+  { level: 61, xpRequired: 466650, role: '1186953493806845994' },
+  { level: 62, xpRequired: 488405, role: '1186953493806845994' },
+  { level: 63, xpRequired: 510825, role: '1186953493806845994' },
+  { level: 64, xpRequired: 533920, role: '1186953493806845994' },
+  { level: 65, xpRequired: 557700, role: '1186953493806845994' },
+  { level: 66, xpRequired: 582175, role: '1186953493806845994' },
+  { level: 67, xpRequired: 607355, role: '1186953493806845994' },
+  { level: 68, xpRequired: 633250, role: '1186953493806845994' },
+  { level: 69, xpRequired: 659870, role: '1186953493806845994' },
+  { level: 70, xpRequired: 687225, role: '1186953493806845994' },
+  { level: 71, xpRequired: 715325, role: '1186953493806845994' },
+  { level: 72, xpRequired: 744180, role: '1186953493806845994' },
+  { level: 73, xpRequired: 773800, role: '1186953493806845994' },
+  { level: 74, xpRequired: 804195, role: '1186953493806845994' },
+  { level: 75, xpRequired: 835375, role: '1186953493806845994' },
+  { level: 76, xpRequired: 867350, role: '1186953493806845994' },
+  { level: 77, xpRequired: 900130, role: '1186953493806845994' },
+  { level: 78, xpRequired: 933725, role: '1186953493806845994' },
+  { level: 79, xpRequired: 968145, role: '1186953493806845994' },
+  { level: 80, xpRequired: 1003400, role: '1186953493806845994' },
+  { level: 81, xpRequired: 1039500, role: '1186953493806845994' },
+  { level: 82, xpRequired: 1076455, role: '1186953493806845994' },
+  { level: 83, xpRequired: 1114275, role: '1186953493806845994' },
+  { level: 84, xpRequired: 1152970, role: '1186953493806845994' },
+  { level: 85, xpRequired: 1192550, role: '1186953493806845994' },
+  { level: 86, xpRequired: 1233025, role: '1186953493806845994' },
+  { level: 87, xpRequired: 1274405, role: '1186953493806845994' },
+  { level: 88, xpRequired: 1316700, role: '1186953493806845994' },
+  { level: 89, xpRequired: 1359920, role: '1186953493806845994' },
+  { level: 90, xpRequired: 1404075, role: '1186953493806845994' },
+  { level: 91, xpRequired: 1449175, role: '1186953493806845994' },
+  { level: 92, xpRequired: 1495230, role: '1186953493806845994' },
+  { level: 93, xpRequired: 1542250, role: '1186953493806845994' },
+  { level: 94, xpRequired: 1590225, role: '1186953493806845994' },
+  { level: 95, xpRequired: 1639175, role: '1186953493806845994' },
+  { level: 96, xpRequired: 1689100, role: '1186953493806845994' },
+  { level: 97, xpRequired: 1739995, role: '1186953493806845994' },
+  { level: 98, xpRequired: 1791875, role: '1186953493806845994' },
+  { level: 99, xpRequired: 1844750, role: '1186953493806845994' },
+  { level: 100, xpRequired: 1898625, role: '1186953493806845994' },
 ];
-
-// ///////////////////////////////////// for prestige system /////////////////////////////////////
-
-export const prestigeLevelRoles: PrestigeLevelRole[] = [
-  { prestige_level: 1, xpRequired: 1000 },
-  { prestige_level: 2, xpRequired: 2300 },
-  { prestige_level: 3, xpRequired: 3600 },
-  { prestige_level: 4, xpRequired: 5000 },
-  { prestige_level: 5, xpRequired: 6500 },
-  { prestige_level: 6, xpRequired: 8150 },
-  { prestige_level: 7, xpRequired: 9800 },
-  { prestige_level: 8, xpRequired: 11500 },
-  { prestige_level: 9, xpRequired: 13200 },
-  { prestige_level: 10, xpRequired: 15000 },
-]
-
-export async function generatePrestigeLeaderboard(topUsers: string | any[], limit: number) {
-  let prestigeLeaderboard = "```css\n"; // Using code block for a different visual style
-
-  for (let i = 0; i < topUsers.length; i++) {
-    const userTag = (await client.users.fetch(topUsers[i].userID))?.tag;
-    let rank;
-    switch (i) {
-      case 0:
-        rank = "🏴‍☠️"; // Emojis for ranking
-        break;
-      case 1:
-        rank = "🏴‍☠️🏴‍☠️";
-        break;
-      case 2:
-        rank = "🏴‍☠️🏴‍☠️🏴‍☠️";
-        break;
-      default:
-        rank = `${i + 1}.`;
-    }
-
-    const currentXP = topUsers[i].prestige_xp; // Assuming the XP field for prestige users is 'prestige_xp'
-    const currentLevel = topUsers[i].prestige_level; // Assuming the level field for prestige users is 'prestige_level'
-
-    prestigeLeaderboard += `${rank} ${userTag}\n` +
-      `  • Prestige Level: ${currentLevel}\n` +
-      `  • Prestige XP: ${currentXP} xp\n` +
-      "\n"; // Separate leaderboard entries
-  }
-
-  prestigeLeaderboard += "```";
-  return prestigeLeaderboard;
-}
-
-export const calculateNextPrestigeLevel = (currentPrestigeLevel: number) => {
-  const nextPrestigeLevelData = prestigeLevelRoles.find((role) => role.prestige_level === currentPrestigeLevel + 1);
-
-  if (nextPrestigeLevelData) {
-    return nextPrestigeLevelData.xpRequired;
-  } else {
-    // Return a default value if the next level data is not found
-    return -1; // You can return any default value indicating no next level or handle it accordingly
-  }
-}

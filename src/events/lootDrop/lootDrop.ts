@@ -38,13 +38,11 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const usersXP = userQuery.xp_points;
                 let userLevel = userQuery.xp_level;
 
-                if (userLevel === 50) return interaction.reply({ content: "Can't do that as a level 50.", ephemeral: true });
-
                 const today = new Date().getDay();
                 const checkIfItsSaturdayOrSunday = today === 6 || today === 0;
 
                 // if it isnt weekend, the users above level 10 cannot claim the loot
-                if (!checkIfItsSaturdayOrSunday && userLevel >= 10) return interaction.reply({ content: "You cannot claim above level 10 during the week.", ephemeral: true });
+                if (!checkIfItsSaturdayOrSunday && userLevel >= 30) return interaction.reply({ content: "You cannot claim above level 30 during the week.", ephemeral: true });
 
                 // const nextLevel = usersLevel + 1;
                 // const xpRequiredForNextLevel = levelRoles.find((role) => role.level === nextLevel)?.xpRequired;
@@ -130,13 +128,11 @@ export default class InteractionCreateEvent extends BaseEvent {
                 // check if user is blacklisted
                 if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
 
-                if (userQuery.prestige.is_prestige) return interaction.reply({ content: "You can not do that as a prestige.", ephemeral: true });
-
                 let userLevel = userQuery.xp_level;
                 let usersXP = userQuery.xp_points;
                 const message = interaction.message;
 
-                if (userLevel < 3) return interaction.reply({ content: "You must be at least level 3 to risk it.", ephemeral: true });
+                if (userLevel < 3) return interaction.reply({ content: "You must be at least level 5 to risk it.", ephemeral: true });
 
                 const chosenOption = Math.random() < 0.8 ? "win" : "lose"; // 80% chance to win
                 let response = "";

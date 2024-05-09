@@ -64,7 +64,7 @@ export default new Command({
                     inline: true,
                 },
                 {
-                    name: "Prestige",
+                    name: "Ex Prestige",
                     value: `${userQuery.prestige.is_prestige ? emojis.success : emojis.error}`,
                     inline: true,
                 },
