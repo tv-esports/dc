@@ -49,9 +49,9 @@ export default class MessageEvent extends BaseEvent {
     // Check if it's Saturday (6) or Sunday (0)
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
-    // Calculate XP based on whether it's the weekend or not or the user is in prestige mode (prestige users get 0.5x xp)
+    // Calculate XP based on whether it's the weekend or not 
     //                                  weekend * 2                  not weekend
-    let XP_TO_GIVE = isWeekend ? generateRandomXP(12, 16) : generateRandomXP(4, 8);
+    let XP_TO_GIVE = isWeekend ? generateRandomXP(16, 24) : generateRandomXP(8, 12);
 
     // User is on cooldown, ignore message
     if (userCooldown && (currentTime - userCooldown) < cooldownTime) return;

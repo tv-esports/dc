@@ -1,4 +1,4 @@
-import { PermissionFlagsBits, ButtonBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ApplicationCommandOptionType } from "discord.js";
+import { PermissionFlagsBits, ButtonBuilder, EmbedBuilder, ButtonStyle, ActionRowBuilder, ApplicationCommandOptionType, AttachmentBuilder } from "discord.js";
 import { ownerCheck } from "../../guards/owner";
 import { Command } from "../../structures/Command";
 import UserModel from "../../models/user/user";
@@ -7,7 +7,6 @@ import config from "../../../owner.json";
 import GuildModel from "../../models/guild/guild";
 
 import { levelRoles } from "../../functions/xp";
-import { convertNameToEmoji } from "../../functions/badge";
 
 export default new Command({
     name: "mod",
@@ -109,7 +108,33 @@ export default new Command({
                     required: false
                 }
             ]
-        }
+        },
+        {
+            name: "view-data",
+            description: "View the extended data of a user",
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    name: "id",
+                    description: "The users discord ID",
+                    type: ApplicationCommandOptionType.String,
+                    required: true
+                }
+            ]
+        },
+        {
+            name: "troll-user",
+            description: "Mess with a user",
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    name: "user",
+                    description: "Select the user",
+                    type: ApplicationCommandOptionType.User,
+                    required: true
+                }
+            ],
+        },
     ],
     run: async ({ interaction, client }) => {
         await ownerCheck(interaction);
@@ -240,6 +265,83 @@ export default new Command({
 
                 await interaction.reply({ content: `${user}`, embeds: [embed], ephemeral: false });
             }
+        }
+
+        if (interaction.options.getSubcommand() === "view-data") {
+            const id = interaction.options.getString("id");
+
+            const userQuery = await UserModel.findOne({ userID: id });
+            if (!userQuery) return interaction.reply({ content: "This user is not in the database. Let him send a message first.", ephemeral: true });
+
+            const data = JSON.stringify(userQuery, null, 2);
+            const buffer = Buffer.from(data, "utf-8");
+
+            const attachment = {
+                name: `${id}.json`,
+                file: buffer
+            }
+
+            const messageAttachment = new AttachmentBuilder(attachment.name).setName(attachment.name).setFile(attachment.file);
+
+            await interaction.reply({ content: "Done! For privacy reasons it's only visible to you.", files: [messageAttachment], ephemeral: true });
+        }
+
+        if (interaction.options.getSubcommand() === "troll-user") {
+            const userID = interaction.options.getUser("user").id;
+            const userQuery = await UserModel.findOne({ userID: userID });
+
+            if (userID === interaction.user.id) return interaction.reply({ content: "You can't troll yourself.", ephemeral: true });
+            if (userID === client.user.id) return interaction.reply({ content: "You can't troll me.", ephemeral: true });
+            
+            if (!userQuery) return interaction.reply({ content: "This user is not in the database. Let him send a message first.", ephemeral: true });
+            if (userQuery.xp_level < 10) return interaction.reply({ content: "Can't troll users below level 10.", ephemeral: true });
+
+            const trollEmbed = new EmbedBuilder()
+                .setTitle("Troll User")
+                .setDescription(`
+                Welcome to the troll menu. Here you can mess with a user by either being nice or mean.`)
+                .addFields(
+                    { name: "🔴 XP", value: "Remove random XP from the user", inline: true }, 
+                    { name: "🟢 XP", value: "Add random XP to the user", inline: true },
+                    { name: "🔵 Nickname", value: "Change the users nickname", inline: true },
+                    { name: "🟡 Timeout", value: "Timeout the user", inline: true },
+                )
+                .addFields(
+                    { name: "Victim", value: `<@${userID}>`, inline: false },
+
+                )
+                .setColor("Red")
+                .setFooter({ text: userID })
+                .setTimestamp();
+
+            const redButton = new ButtonBuilder()
+                .setCustomId("troll-xp-remove")
+                .setLabel("XP")
+                .setEmoji("🔴")
+                .setStyle(ButtonStyle.Danger);
+
+            const blueButton = new ButtonBuilder()
+                .setCustomId("troll-xp-add")
+                .setLabel("XP")
+                .setEmoji("🟢")
+                .setStyle(ButtonStyle.Success);
+
+            const nicknameButton = new ButtonBuilder()
+                .setCustomId("troll-nickname")
+                .setLabel("Nickname")
+                .setEmoji("🔵")
+                .setStyle(ButtonStyle.Secondary);
+
+            const timeoutButton = new ButtonBuilder()
+                .setCustomId("troll-timeout")
+                .setLabel("Timeout")
+                .setEmoji("🟡")
+                .setStyle(ButtonStyle.Secondary);
+
+            const actionRow = new ActionRowBuilder<ButtonBuilder>()
+                .addComponents([redButton, blueButton, nicknameButton, timeoutButton]);
+
+            await interaction.reply({ embeds: [trollEmbed], components: [actionRow], ephemeral: false });
         }
     },
 });

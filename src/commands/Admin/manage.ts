@@ -88,19 +88,6 @@ export default new Command({
             ]
         },
         {
-            name: "lfg-panel",
-            description: "Sends the LFG panel",
-            type: ApplicationCommandOptionType.Subcommand,
-            options: [
-                {
-                    name: "channel",
-                    description: "The channel to send the panel in",
-                    type: ApplicationCommandOptionType.Channel,
-                    required: false
-                }
-            ]
-        },
-        {
             name: "xp-drop",
             description: "Drop XP for everyone",
             type: ApplicationCommandOptionType.Subcommand,
