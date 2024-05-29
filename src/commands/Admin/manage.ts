@@ -5,6 +5,7 @@ import { Command } from "../../structures/Command";
 import GuildModel from "../../models/guild/guild";
 import UserModel from "../../models/user/user";
 import DropModel from "../../models/xpdrop/drop";
+import VoucherModel from "../../models/voucher/xpvoucher";
 
 export default new Command({
     name: "manage",
@@ -97,6 +98,25 @@ export default new Command({
                     description: "The amount of XP to drop",
                     type: ApplicationCommandOptionType.Integer,
                     required: true
+                }
+            ]
+        },
+        {
+            name: "voucher",
+            description: "Create a voucher for XP",
+            type: ApplicationCommandOptionType.Subcommand,
+            options: [
+                {
+                    name: "xp",
+                    description: "The amount of XP to give",
+                    type: ApplicationCommandOptionType.Integer,
+                    required: true
+                },
+                {
+                    name: "usage",
+                    description: "The amount of times the voucher can be used",
+                    type: ApplicationCommandOptionType.Integer,
+                    required: false
                 }
             ]
         },
@@ -406,6 +426,32 @@ export default new Command({
                 .setTimestamp();
 
             return interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+
+        if (interaction.options.getSubcommand() === "voucher") {
+            const xp = interaction.options.getInteger("xp");
+            const usage = interaction.options.getInteger("usage") || 1;
+
+            const voucherCode = Math.random().toString(36).substring(7);
+
+            const embed = new EmbedBuilder()
+                .setTitle(`Generated XP voucher`)
+                .setDescription(`\`\`\`${voucherCode}\`\`\`\nTo redeem, use \`/voucher redeem <code>\``)
+                .setColor("Random")
+                .setFooter({ text: `Good luck!` })
+                .setTimestamp();
+
+            await VoucherModel.create({
+                adminID: interaction.user.id,
+                xpAmount: xp,
+                voucherCode: voucherCode,
+                usageCount: usage,
+                redeemedBy: [],
+                inserted_at: new Date(),
+                updated_at: new Date()
+            });
+
+            await interaction.reply({ embeds: [embed], ephemeral: false });
         }
     },
 });
