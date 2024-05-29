@@ -67,20 +67,22 @@ export default class MessageEvent extends BaseEvent {
         const role = message.guild.roles.cache.find((r) => r.id === levelRole.role);
 
         if (role && message.member?.roles.cache.has(role.id)) {
-          const levelUpEmbed = new EmbedBuilder()
-            .setColor("Random")
-            .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\``)
-            .setTimestamp();
-          message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
+          // const levelUpEmbed = new EmbedBuilder()
+          //   .setColor("Random")
+          //   .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\``)
+          //   .setTimestamp();
+          // message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
+          message.react("🎉")
         }
 
         if (role && !message.member?.roles.cache.has(role.id)) {
-          const levelUpEmbed = new EmbedBuilder()
-            .setColor("Random")
-            .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\` and received the \`${role.name}\` role`)
-            .setTimestamp();
+          // const levelUpEmbed = new EmbedBuilder()
+          //   .setColor("Random")
+          //   .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\` and received the \`${role.name}\` role`)
+          //   .setTimestamp();
           message.member?.roles.add(role);
-          message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
+          // message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
+          message.react("🎉")
         }
 
         userLevel = levelRole.level;

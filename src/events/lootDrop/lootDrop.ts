@@ -84,22 +84,24 @@ export default class InteractionCreateEvent extends BaseEvent {
                         const role = interaction.guild.roles.cache.find((r) => r.id === levelRole.role);
 
                         if (role && interaction.member?.roles.cache.has(role.id)) {
-                            const levelUpEmbed = new EmbedBuilder()
-                                .setColor("Random")
-                                .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\``)
-                                .setImage(`${randomGif()}`)
-                                .setTimestamp();
-                            await interaction.reply({ content: `${interaction.user}`, embeds: [levelUpEmbed] });
+                            // const levelUpEmbed = new EmbedBuilder()
+                            //     .setColor("Random")
+                            //     .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\``)
+                            //     .setImage(`${randomGif()}`)
+                            //     .setTimestamp();
+                            // await interaction.reply({ content: `${interaction.user}`, embeds: [levelUpEmbed] });
+                            await message.react("🎉");
                         }
 
                         if (role && !interaction.member?.roles.cache.has(role.id)) {
-                            const levelUpEmbed = new EmbedBuilder()
-                                .setColor("Random")
-                                .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\` and received the \`${role.name}\` role`)
-                                .setImage(`${randomGif()}`)
-                                .setTimestamp();
+                            // const levelUpEmbed = new EmbedBuilder()
+                            //     .setColor("Random")
+                            //     .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\` and received the \`${role.name}\` role`)
+                            //     .setImage(`${randomGif()}`)
+                            //     .setTimestamp();
                             await interaction.member?.roles.add(role);
-                            await interaction.reply({ content: `${interaction.user}`, embeds: [levelUpEmbed] });
+                            await message.react("🎉");
+                            // await interaction.reply({ content: `${interaction.user}`, embeds: [levelUpEmbed] });
                         }
 
                         userLevel = levelRole.level;
