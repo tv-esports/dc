@@ -1,4 +1,4 @@
-import { ApplicationCommandOptionType, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import { Command } from "../../structures/Command";
 
 import UserModel from "../../models/user/user";
@@ -30,14 +30,14 @@ export default new Command({
             name: "leaderboard",
             description: "The servers leaderboard",
             type: ApplicationCommandOptionType.Subcommand,
-            // options: [
-            //     {
-            //         name: "top",
-            //         description: "How many should be displayed (max 15)",
-            //         type: ApplicationCommandOptionType.Number,
-            //         required: false
-            //     }
-            // ],
+            options: [
+                {
+                    name: "page",
+                    description: "What page should be displayed",
+                    type: ApplicationCommandOptionType.Number,
+                    required: false
+                }
+            ],
         },
         {
             name: "settings",
@@ -68,7 +68,7 @@ export default new Command({
             const userIndex = allUsers.findIndex((u) => u.userID === user.id); // Find the index of the user in the array
             const userRankCheck = userIndex !== -1 ? `Rank on leaderboard: ${userIndex + 1}` : `${user.username} is still unranked`;
 
-            const embed = new EmbedBuilder()
+            const levelembed = new EmbedBuilder()
                 .setTitle(`Level of ${user.username}`)
                 .setDescription(`**Level:** ${userRank} | **XP:** ${userXP} xp\n` +
                     `${progressBar(userXP, xpToNextLevel)}\n` +
@@ -77,7 +77,7 @@ export default new Command({
                 .setFooter({ text: `${userRankCheck}` })
 
             return await interaction.reply({
-                embeds: [embed],
+                embeds: [levelembed.toJSON()],
                 ephemeral: true
             });
         }
@@ -86,17 +86,21 @@ export default new Command({
             const guildQuery = await GuildModel.findOne({ guildID: interaction.guildId });
             if (!guildQuery) return interaction.reply({ content: "There is no valid data for this leaderboard.", ephemeral: true });
 
-            const limit = interaction.options.getNumber("top") || 5;
-            if (limit < 5 || limit > 15 || isNaN(limit)) return interaction.reply({ content: "Enter a real number, which is above 5 and below 16", ephemeral: true });
-
-            let leaderboard = "";
+            const page = interaction.options.getNumber("page") || 1; // Default to page 1 if no page is specified
+            const usersPerPage = 5;
+            const startIndex = (page - 1) * usersPerPage;
 
             const topRegularUsers = await UserModel.aggregate([
                 { $sort: { xp_level: -1, xp_points: -1 } },
-                { $limit: limit },
             ]);
 
-            for (let i = 0; i < topRegularUsers.length; i++) {
+            const totalPages = Math.ceil(topRegularUsers.length / usersPerPage);
+            if (page < 1 || page > totalPages) return interaction.reply({ content: `Enter a valid page number between 1 and ${totalPages}`, ephemeral: true });
+
+            let leaderboard = "";
+            const endIndex = Math.min(startIndex + usersPerPage, topRegularUsers.length);
+
+            for (let i = startIndex; i < endIndex; i++) {
                 const userTag = (await client.users.fetch(topRegularUsers[i].userID))?.tag;
                 let emoji;
 
@@ -124,7 +128,11 @@ export default new Command({
                     "\n";
             }
 
-            const embed = new EmbedBuilder().setTitle("Team Void Leaderboard").setDescription(leaderboard).setFooter({ text: "Showing: Top " + limit });
+            const embed = new EmbedBuilder()
+                .setTitle("Team Void Leaderboard")
+                .setDescription(leaderboard)
+                .setFooter({ text: `Page ${page} of ${totalPages}` });
+
             await interaction.reply({
                 embeds: [embed],
             });
