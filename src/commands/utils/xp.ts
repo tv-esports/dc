@@ -36,6 +36,30 @@ export default new Command({
                     description: "What page should be displayed",
                     type: ApplicationCommandOptionType.Number,
                     required: false
+                },
+                {
+                    name: "minlevel",
+                    description: "The minimum level to show",
+                    type: ApplicationCommandOptionType.Number,
+                    required: false
+                },
+                {
+                    name: "maxlevel",
+                    description: "The maximum level to show",
+                    type: ApplicationCommandOptionType.Number,
+                    required: false
+                },
+                {
+                    name: "minxp",
+                    description: "The minimum xp to show",
+                    type: ApplicationCommandOptionType.Number,
+                    required: false
+                },
+                {
+                    name: "maxxp",
+                    description: "The maximum xp to show",
+                    type: ApplicationCommandOptionType.Number,
+                    required: false
                 }
             ],
         },
@@ -85,26 +109,32 @@ export default new Command({
         if (interaction.options.getSubcommand() === "leaderboard") {
             const guildQuery = await GuildModel.findOne({ guildID: interaction.guildId });
             if (!guildQuery) return interaction.reply({ content: "There is no valid data for this leaderboard.", ephemeral: true });
-
+        
             const page = interaction.options.getNumber("page") || 1; // Default to page 1 if no page is specified
+            const minLevel = interaction.options.getNumber("minlevel") || 0; // Default to 0 if not specified
+            const maxLevel = interaction.options.getNumber("maxlevel") || Infinity; // Default to Infinity if not specified
+            const minXP = interaction.options.getNumber("minxp") || 0; // Default to 0 if not specified
+            const maxXP = interaction.options.getNumber("maxxp") || Infinity; // Default to Infinity if not specified
+        
             const usersPerPage = 5;
             const startIndex = (page - 1) * usersPerPage;
-
+        
             const topRegularUsers = await UserModel.aggregate([
+                { $match: { xp_level: { $gte: minLevel, $lte: maxLevel }, xp_points: { $gte: minXP, $lte: maxXP } } },
                 { $sort: { xp_level: -1, xp_points: -1 } },
             ]);
-
+        
             const totalPages = Math.ceil(topRegularUsers.length / usersPerPage);
             if (page < 1 || page > totalPages) return interaction.reply({ content: `Enter a valid page number between 1 and ${totalPages}`, ephemeral: true });
-
+        
             let leaderboard = "";
             const endIndex = Math.min(startIndex + usersPerPage, topRegularUsers.length);
-
+        
             for (let i = startIndex; i < endIndex; i++) {
                 const userTag = (await client.users.fetch(topRegularUsers[i].userID))?.tag;
                 let emoji;
-
-                switch (i) {
+        
+                switch (i % 5) {
                     case 0:
                         emoji = "🥇";
                         break;
@@ -117,22 +147,22 @@ export default new Command({
                     default:
                         emoji = "🎖️";
                 }
-
+        
                 const currentXP = topRegularUsers[i].xp_points;
                 const currentLevel = topRegularUsers[i].xp_level;
                 const xpToNextLevel = calculateXPForNextLevel(currentLevel);
-
+        
                 leaderboard += `${emoji} **${userTag}**\n` +
                     `**Level:** ${currentLevel} | **XP:** ${currentXP} xp\n` +
                     `${progressBar(currentXP, xpToNextLevel)}\n` +
                     "\n";
             }
-
+        
             const embed = new EmbedBuilder()
                 .setTitle("Team Void Leaderboard")
                 .setDescription(leaderboard)
                 .setFooter({ text: `Page ${page} of ${totalPages}` });
-
+        
             await interaction.reply({
                 embeds: [embed],
             });
