@@ -331,41 +331,6 @@ export default new Command({
             }
         }
 
-        if (interaction.options.getSubcommand() === "lfg-panel") {
-            const channelOption = interaction.options.getChannel("channel") || interaction.channel;
-            const channel = (await interaction.guild.channels.fetch(channelOption.id)) as TextChannel;
-
-            const panelEmbed = new EmbedBuilder()
-                .setTitle(`Looking For Game`)
-                .setDescription(`Click the button below to ask for a team-up!\n\nYou can choose between Duo, Trio and Squad. Additionally you can also enter needed roles for these games.`)
-                .setColor("Gold")
-                .setTimestamp();
-
-            const duoQ = new ButtonBuilder()
-                .setStyle(ButtonStyle.Secondary)
-                .setLabel("Duo Q")
-                .setCustomId("duoq")
-            //.setEmoji("👥");
-
-            const trioQ = new ButtonBuilder()
-                .setStyle(ButtonStyle.Secondary)
-                .setLabel("Trio")
-                .setCustomId("trioq")
-            //.setEmoji("👪");
-
-            const fiveQ = new ButtonBuilder()
-                .setStyle(ButtonStyle.Secondary)
-                .setLabel("Squad")
-                .setCustomId("fiveq")
-            //.setEmoji("👨‍👩‍👧‍👦👥");
-
-            const actionRow = new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(duoQ, trioQ, fiveQ);
-
-            await channel.send({ embeds: [panelEmbed], components: [actionRow] });
-            interaction.reply({ content: `LFG panel has been sent to ${channel}`, ephemeral: true });
-        }
-
         if (interaction.options.getSubcommand() === "xp-drop") {
             const amount = interaction.options.getInteger("amount");
             if (amount >= 15000) return interaction.reply({ content: `You can't drop more than 15000 XP!`, ephemeral: true });

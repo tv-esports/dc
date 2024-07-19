@@ -7,6 +7,8 @@ import { levelRoles, randomGif } from "../../functions/xp";
 
 import GuildModel from "../../models/guild/guild";
 import UserModel from "../../models/user/user";
+import DropModel from "../../models/xpdrop/drop";
+import VoucherModel from "../../models/voucher/xpvoucher";
 
 export default class InteractionCreateEvent extends BaseEvent {
     constructor() {
@@ -64,9 +66,6 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const lootRow = new ActionRowBuilder<ButtonBuilder>()
                     .addComponents(lootButton)
 
-                // const newXP = usersXP + 50 /* XP gained from loot */;
-                // const nextLevelXP = levelRoles[userLevel + 1]?.xpRequired || Infinity;
-
                 let newXP;
                 // if its weekend and user is below level 10, give 100XP
                 if (checkIfItsSaturdayOrSunday && userLevel < 10) {
@@ -105,12 +104,6 @@ export default class InteractionCreateEvent extends BaseEvent {
                         }
 
                         userLevel = levelRole.level;
-
-                        // if (newXP >= nextLevelXP) {
-                        //     const newLevel = userLevel + 1;
-
-                        //     await UserModel.updateOne({ userID: interaction.user.id }, { xp_points: newXP, xp_level: newLevel });
-                        // }
                     }
                 }
 
@@ -209,6 +202,83 @@ export default class InteractionCreateEvent extends BaseEvent {
 
                 // Respond with the chosen option and its result
                 await interaction.reply({ content: response, ephemeral: true });
+                break;
+            }
+
+            case "drop-extra-xp-button": {
+                const message = interaction.message;
+                const amount = 25;
+
+                const userQuery = await UserModel.findOne({ userID: interaction.user.id });
+                const dropQuery = await DropModel.findOne({ guildID: interaction.guild.id }).sort({ inserted_at: -1 });
+                const guildQuery = await GuildModel.findOne({ guildID: interaction.guild.id });
+                if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: `XP is not active.`, ephemeral: true });
+
+                if (!userQuery || guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: `You can't do that`, ephemeral: true });
+
+                const extraXPEmbed = new EmbedBuilder()
+                    .setDescription(`<@${interaction.user.id}> decided to drop some extra XP`)
+                    .setColor("Random")
+                    .setImage("https://static.wikia.nocookie.net/fortnite/images/0/07/Chest_-_Chest_-_Fortnite.png/revision/latest?cb=20231016113143")
+                    .setTimestamp()
+                    .setFooter({ text: "Fast!", iconURL: client.user?.displayAvatarURL() });
+
+                const xpDropButton = new ButtonBuilder()
+                    .setCustomId("xp-drop-button")
+                    .setLabel("🖐 Claim")
+                    .setStyle(ButtonStyle.Success);
+
+                const xpRow = new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents(xpDropButton);
+
+                await message.edit({ embeds: [extraXPEmbed], components: [xpRow] });
+
+                if (!dropQuery) {
+                    await DropModel.create({ guildID: interaction.guild.id, dropMessage: message.id, amount: amount, inserted_at: new Date(), updated_at: new Date() });
+                } else {
+                    await DropModel.findOneAndUpdate({ guildID: interaction.guild.id }, { dropMessage: message.id, amount: amount });
+                }
+                break;
+            }
+
+            case "share-xp-button": {
+                const message = interaction.message;
+                const xpToShare = 30;
+                const usage = 2;
+
+                const voucherCode = Math.random().toString(36).substring(7);
+                const shareXPEmbed = new EmbedBuilder()
+                    .setDescription(`<@${interaction.user.id}> decided to share a XP voucher with a friend\n\n\`\`\`${voucherCode}\`\`\`\nTo redeem, use \`/voucher redeem <code>\``)
+                    .setColor("Random")
+                    .setImage("https://paytechlaw.com/wp-content/uploads/190414_Corona-Voucher_Artenauta.png")
+                    .setTimestamp()
+                    .setFooter({ text: "Fast!", iconURL: client.user?.displayAvatarURL() });
+
+                await VoucherModel.create({
+                    adminID: interaction.user.id,
+                    xpAmount: xpToShare,
+                    voucherCode: voucherCode,
+                    usageCount: usage,
+                    redeemedBy: [],
+                    inserted_at: new Date(),
+                    updated_at: new Date()
+                });
+
+                await message.edit({ embeds: [shareXPEmbed], components: [] });
+                break;
+            }
+
+            case "destroy-button": {
+                const message = interaction.message;
+
+                const destroyEmbed = new EmbedBuilder()
+                    .setDescription(`<@${interaction.user.id}> decided to destroy the loot chest`)
+                    .setColor("Random")
+                    .setImage("https://www.brandonthatchers.co.uk/uploads/items/33e065a17e37cbee/14438daf0c83b3b3.jpeg?size=224&date=1660743589")
+                    .setTimestamp()
+                    .setFooter({ text: "R.I.P", iconURL: client.user?.displayAvatarURL() });
+
+                await message.edit({ embeds: [destroyEmbed], components: [] });
                 break;
             }
         }
