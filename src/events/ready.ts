@@ -1,13 +1,15 @@
 import { ActivityType } from "discord.js";
 import { ExtendedClient } from "../structures/Client";
 import { BaseEvent } from "../structures/Event";
-import { lootDrop } from "../jobs/lootDrop";
-import { announceWeekend } from "../jobs/announceWeekend";
-import { victim } from "../jobs/victim";
 
 import Logger from "../util";
 
 import { envguard } from "env";
+import { lootDrop } from "../jobs/lootDrop";
+import { announceWeekend } from "../jobs/announceWeekend";
+import { victim } from "../jobs/victim";
+import { announceGiveaway } from "../jobs/giveaway/announceGiveaway";
+import { endGiveaway } from "../jobs/giveaway/endGiveaway";
 
 export default class ReadyEvent extends BaseEvent {
   constructor() {
@@ -28,8 +30,8 @@ export default class ReadyEvent extends BaseEvent {
     lootDrop();
     announceWeekend();
     victim();
-    //announceLottery();
-    //closeLottery();
-    //announceWinners();
+
+    announceGiveaway();
+    endGiveaway();
   }
 }
