@@ -1,6 +1,6 @@
 const Discord = require('discord.js')
 
-import { ApplicationCommandOptionType, EmbedBuilder, PermissionFlagsBits } from "discord.js";
+import { EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import { ownerCheck } from "../../guards/owner";
 import { Command } from "../../structures/Command";
 import { msToTimeObj } from "../../functions/ms";
@@ -17,13 +17,10 @@ export default new Command({
 
     const timeObj = msToTimeObj(interaction.client.uptime);
 
-    const interactionTime = interaction.createdTimestamp - Date.now();
-
     const infos = stripIndent`
-    • Ping     : ${interactionTime}ms
     • Uptime   : ${timeObj.days} days, ${timeObj.hours} hours, ${timeObj.minutes} minutes, ${timeObj.seconds} seconds
     • Users    : ${client.users.cache.size}
-    • Library  : Discord.js | v${Discord.version}
+    • Version  : v${Discord.version}
     • RAM      : ${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(
       2,
     )} MB / ${(process.memoryUsage().rss / 1024 / 1024).toFixed(2)} MB\n`
