@@ -31,10 +31,13 @@ dependencies:
     version: 10.0.0
   env:
     specifier: github:tv-esports/env
-    version: github.com/tv-esports/env/e2144563c54107f268623b0868f387eb468ca845(date-fns@2.30.0)
+    version: github.com/tv-esports/env/3c6a8f490f2a2a5a3119fa8cd7f219d5417c095a(date-fns@2.30.0)
   glob:
     specifier: ^7.2.3
     version: 7.2.3
+  moment-timezone:
+    specifier: ^0.5.45
+    version: 0.5.45
   mongoose:
     specifier: ^6.12.2
     version: 6.12.2
@@ -3307,6 +3310,16 @@ packages:
     dependencies:
       brace-expansion: 1.1.11
 
+  /moment-timezone@0.5.45:
+    resolution: {integrity: sha512-HIWmqA86KcmCAhnMAN0wuDOARV/525R2+lOLotuGFzn4HO+FH+/645z2wx0Dt3iDv6/p61SIvKnDstISainhLQ==}
+    dependencies:
+      moment: 2.30.1
+    dev: false
+
+  /moment@2.30.1:
+    resolution: {integrity: sha512-uEmtNhbDOrWPFS+hdjFCBfy9f2YoyzRpwcl+DqpC6taX21FzsTLQVbMV/W7PzNSX6x/bhC1zA3c2UQ5NzH6how==}
+    dev: false
+
   /mongodb-connection-string-url@2.6.0:
     resolution: {integrity: sha512-WvTZlI9ab0QYtTYnuMLgobULWhokRjtC7db9LtcVfJ+Hsnyr5eo6ZtNAt3Ly24XZScGMelOcGtm7lSn0332tPQ==}
     dependencies:
@@ -4040,11 +4053,11 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  github.com/tv-esports/env/e2144563c54107f268623b0868f387eb468ca845(date-fns@2.30.0):
-    resolution: {tarball: https://codeload.github.com/tv-esports/env/tar.gz/e2144563c54107f268623b0868f387eb468ca845}
-    id: github.com/tv-esports/env/e2144563c54107f268623b0868f387eb468ca845
+  github.com/tv-esports/env/3c6a8f490f2a2a5a3119fa8cd7f219d5417c095a(date-fns@2.30.0):
+    resolution: {tarball: https://codeload.github.com/tv-esports/env/tar.gz/3c6a8f490f2a2a5a3119fa8cd7f219d5417c095a}
+    id: github.com/tv-esports/env/3c6a8f490f2a2a5a3119fa8cd7f219d5417c095a
     name: env
-    version: 1.0.0
+    version: 1.2.0
     dependencies:
       colors: 1.4.0
       date-fns-tz: 2.0.0(date-fns@2.30.0)

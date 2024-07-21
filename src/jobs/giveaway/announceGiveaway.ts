@@ -2,6 +2,8 @@ import { EmbedBuilder, TextChannel, ButtonBuilder, ButtonStyle, ActionRowBuilder
 import cron from "node-cron";
 import { client } from "../../index";
 
+import moment from "moment-timezone";
+
 import GuildModel from "../../models/guild/guild";
 import GiveawayModel from "../../models/giveaway/giveaway";
 
@@ -27,30 +29,30 @@ export async function announceGiveaway() {
 
     const giveawayrow = new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton);
 
-    const now = new Date();
-    const endsIn = new Date(now.getTime() + 20 * 60 * 60 * 1000);
-    const timestamp = Math.floor(endsIn.getTime() / 1000);
-
-    const giveawayEmbed = new EmbedBuilder()
-        .setDescription("A new XP-Giveaway has been started 🎉")
-        .setColor("Random")
-        .addFields(
-            {
-                name: "Price 🎁",
-                value: `${pricepool} XP`
-            },
-            {
-                name: "Users 🧑",
-                value: "0"
-            },
-            {
-                name: "Ends in ⏰",
-                value: `<t:${timestamp}:R>`
-            }
-        )
-        .setImage("https://www.pushengage.com/wp-content/uploads/2022/11/Social-Media-Giveaway-Ideas.png")
-
     cron.schedule("0 0 * * *", async () => {
+        const now = moment().tz("Europe/Berlin");
+        const endsIn = now.clone().add(20, 'hours');
+        const timestamp = Math.floor(endsIn.valueOf() / 1000);
+
+        const giveawayEmbed = new EmbedBuilder()
+            .setDescription("A new XP-Giveaway has been started 🎉")
+            .setColor("Random")
+            .addFields(
+                {
+                    name: "Price 🎁",
+                    value: `${pricepool} XP`
+                },
+                {
+                    name: "Users 🧑",
+                    value: "0"
+                },
+                {
+                    name: "Ends in ⏰",
+                    value: `<t:${timestamp}:R>`
+                }
+            )
+            .setImage("https://www.pushengage.com/wp-content/uploads/2022/11/Social-Media-Giveaway-Ideas.png")
+
         const giveawayMessageID = await (channel as TextChannel).send({ embeds: [giveawayEmbed], components: [giveawayrow] });
         await GiveawayModel.create({
             giveawayMessageID: giveawayMessageID.id,
