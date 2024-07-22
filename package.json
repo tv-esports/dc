@@ -21,7 +21,7 @@
     "common-tags": "^1.8.2",
     "concurrently": "^7.6.0",
     "dedent": "^1.5.1",
-    "discord.js": "^14.13.0",
+    "discord.js": "^14.15.3",
     "dotenv": "^10.0.0",
     "env": "github:tv-esports/env",
     "glob": "^7.2.3",
