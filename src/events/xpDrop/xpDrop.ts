@@ -1,13 +1,13 @@
+import { EmbedBuilder } from "discord.js";
 import { ExtendedClient } from "../../structures/Client";
 import { BaseEvent } from "../../structures/Event";
 import { ExtendedButtonInteraction } from "../../typings/Command";
 
-import { levelRoles } from "../../functions/xp";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
-
 import DropModel from "../../models/xpdrop/drop";
 import GuildModel from "../../models/guild/guild";
 import UserModel from "../../models/user/user";
+
+import { levelRoles } from "../../functions/xp";
 
 export default class InteractionCreateEvent extends BaseEvent {
     constructor() {
@@ -51,33 +51,13 @@ export default class InteractionCreateEvent extends BaseEvent {
                     .setColor("Random")
                     .setFooter({ text: "Be nice to get another one.", iconURL: client.user?.displayAvatarURL() });
 
-                const widButton = new ButtonBuilder()
-                    .setCustomId("xp-wid-button")
-                    .setLabel("👻 Congrats")
-                    .setStyle(ButtonStyle.Secondary)
-                    .setDisabled(true);
-
-                const widRow = new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents(widButton)
-
-                await interaction.message.edit({ embeds: [embed], components: [widRow] })
+                await interaction.message.edit({ embeds: [embed] });
                 await UserModel.findOneAndUpdate({ userID: interaction.user.id }, { xp_points: newUserXP, xp_level: newUserLevel });
                 await interaction.reply({ content: "You claimed the XP drop!", ephemeral: true });
                 break;
 
-            // case "xp-wid-button":
-            //     const widEmbed = new EmbedBuilder()
-            //         .setDescription(`Hello ${interaction.user.username}!\nDue to the server inactivity, a small feature called "XP Drop" was implemented.\nOwners can send this drop whenever they want to help you earn XP faster. It is not possible to lose anything, you can only win.`)
-            //         .setColor("Random")
-            //         .setFooter({ text: "Lets wait for a new drop ...", iconURL: client.user?.displayAvatarURL() })
-            //         .setTimestamp();
-
-            //     await interaction.reply({ embeds: [widEmbed], ephemeral: true });
-
-            // break;
-
             default:
-        break;
-}
+                break;
+        }
     }
 }

@@ -1,4 +1,4 @@
-import { ActionRowBuilder, EmbedBuilder, ModalActionRowComponentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 import { ExtendedClient } from "../../structures/Client";
 import { BaseEvent } from "../../structures/Event";
 import { ExtendedButtonInteraction } from "../../typings/Command";

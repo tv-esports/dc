@@ -31,9 +31,6 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guildId });
                 if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: "The server disabled XPs", ephemeral: true });
 
-                // check if user is blacklisted
-                if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
-
                 const message = interaction.message;
 
                 const usersXP = userQuery.xp_points;
@@ -44,13 +41,6 @@ export default class InteractionCreateEvent extends BaseEvent {
 
                 // if it isnt weekend, the users above level 10 cannot claim the loot
                 if (!checkIfItsSaturdayOrSunday && userLevel >= 30) return interaction.reply({ content: "You cannot claim above level 30 during the week.", ephemeral: true });
-
-                // const nextLevel = usersLevel + 1;
-                // const xpRequiredForNextLevel = levelRoles.find((role) => role.level === nextLevel)?.xpRequired;
-
-                // if (xpRequiredForNextLevel && usersXP >= xpRequiredForNextLevel) {
-                //     return interaction.reply({ content: "You are close to leveling up or already leveled up.", ephemeral: true });
-                // }
 
                 const embed = new EmbedBuilder()
                     .setDescription(`${interaction.user} had fast fingers and claimed the loot! 🎉`)
@@ -118,9 +108,6 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guild?.id });
                 if (!userQuery) return interaction.reply({ content: "You are not in the database, send messages first.", ephemeral: true });
                 if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: "XP is disabled in this server.", ephemeral: true });
-
-                // check if user is blacklisted
-                if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
 
                 let userLevel = userQuery.xp_level;
                 let usersXP = userQuery.xp_points;
@@ -214,7 +201,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guild.id });
                 if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: `XP is not active.`, ephemeral: true });
 
-                if (!userQuery || guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: `You can't do that`, ephemeral: true });
+                if (!userQuery) return interaction.reply({ content: `You can't do that`, ephemeral: true });
 
                 const extraXPEmbed = new EmbedBuilder()
                     .setDescription(`<@${interaction.user.id}> decided to drop some extra XP`)
