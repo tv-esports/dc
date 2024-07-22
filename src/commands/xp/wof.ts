@@ -12,8 +12,9 @@ export default new Command({
     run: async ({ interaction, client }) => {
         const userQuery = await UserModel.findOne({ userID: interaction.user.id });
         const guildQuery = await GuildModel.findOne({ guildID: interaction.guild?.id });
+
         if (!userQuery) return interaction.reply({ content: "You are not in the database yet, send messages first!", ephemeral: true });
-        if (guildQuery.xp_enabled === false || guildQuery?.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that!", ephemeral: true });
+        if (guildQuery.xp_enabled === false) return interaction.reply({ content: "You are not able to do that!", ephemeral: true });
 
         const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
         if (userQuery.updated_at && userQuery.updated_at > twelveHoursAgo) {
