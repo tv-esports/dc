@@ -1,13 +1,13 @@
-import { EmbedBuilder } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "discord.js";
 import { ExtendedClient } from "../../structures/Client";
 import { BaseEvent } from "../../structures/Event";
 import { ExtendedButtonInteraction } from "../../typings/Command";
 
+import { levelRoles } from "../../functions/xp";
+
 import DropModel from "../../models/xpdrop/drop";
 import GuildModel from "../../models/guild/guild";
 import UserModel from "../../models/user/user";
-
-import { levelRoles } from "../../functions/xp";
 
 export default class InteractionCreateEvent extends BaseEvent {
     constructor() {
@@ -28,6 +28,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const dropQuery = await DropModel.findOne({ guildID: interaction.guild.id }).sort({ inserted_at: -1 });
 
                 if (!guildQuery) return interaction.reply({ content: "You can't do that, XP system isn't enabled", ephemeral: true });
+                if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
 
                 const xpAmount = dropQuery.amount;
 

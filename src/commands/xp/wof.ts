@@ -12,7 +12,6 @@ export default new Command({
     run: async ({ interaction, client }) => {
         const userQuery = await UserModel.findOne({ userID: interaction.user.id });
         const guildQuery = await GuildModel.findOne({ guildID: interaction.guild?.id });
-
         if (!userQuery) return interaction.reply({ content: "You are not in the database yet, send messages first!", ephemeral: true });
         if (guildQuery.xp_enabled === false) return interaction.reply({ content: "You are not able to do that!", ephemeral: true });
 

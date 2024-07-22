@@ -27,6 +27,8 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const userQuery = await UserModel.findOne({ userID: interaction.user.id });
                 if (!userQuery) return;
 
+                if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
+
                 const giveawayQuery = await GiveawayModel.findOne().sort({ inserted_at: -1 });
                 if (!giveawayQuery) return;
 
