@@ -52,7 +52,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                     .setColor("Random")
                     .setFooter({ text: "Be nice to get another one.", iconURL: client.user?.displayAvatarURL() });
 
-                await interaction.message.edit({ embeds: [embed] });
+                await interaction.message.edit({ embeds: [embed], components: [] });
                 await UserModel.findOneAndUpdate({ userID: interaction.user.id }, { xp_points: newUserXP, xp_level: newUserLevel });
                 await interaction.reply({ content: "You claimed the XP drop!", ephemeral: true });
                 break;
