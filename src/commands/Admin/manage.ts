@@ -340,8 +340,6 @@ export default new Command({
             const guildQuery = await GuildModel.findOne({ guildID: interaction.guild.id });
             if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: `XP is not active.`, ephemeral: true });
 
-            if (!userQuery || userQuery.xp_level === 50 || guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: `You can't do that`, ephemeral: true });
-
             const embed = new EmbedBuilder()
                 .setDescription(`${interaction.user} dropped some XP for everyone! 🎉`)
                 .setColor("Random")

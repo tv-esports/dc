@@ -7,29 +7,29 @@ import moment from "moment-timezone";
 import GuildModel from "../../models/guild/guild";
 import GiveawayModel from "../../models/giveaway/giveaway";
 
-function generateRandomNumber(min: number, max: number) {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-}
-
 export async function announceGiveaway() {
-    const channel = await client.channels.fetch(process.env.GIVEAWAY_CHAT) as TextChannel;
-
-    if (!channel) return;
-
-    const guildQuery = await GuildModel.findOne({ guildID: channel.guild.id });
-    if (!guildQuery || guildQuery.xp_enabled === false) return;
-
-    const pricepool = generateRandomNumber(80, 260);
-
-    const joinButton = new ButtonBuilder()
-        .setCustomId("enter-giveaway")
-        .setLabel("Participate")
-        .setEmoji("🎰")
-        .setStyle(ButtonStyle.Primary);
-
-    const giveawayrow = new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton);
-
     cron.schedule("0 0 * * *", async () => {
+        function generateRandomNumber(min: number, max: number) {
+            return Math.floor(Math.random() * (max - min + 1) + min);
+        }
+
+        const channel = await client.channels.fetch(process.env.GIVEAWAY_CHAT) as TextChannel;
+
+        if (!channel) return;
+
+        const guildQuery = await GuildModel.findOne({ guildID: channel.guild.id });
+        if (!guildQuery || guildQuery.xp_enabled === false) return;
+
+        const pricepool = generateRandomNumber(80, 260);
+
+        const joinButton = new ButtonBuilder()
+            .setCustomId("enter-giveaway")
+            .setLabel("Participate")
+            .setEmoji("🎰")
+            .setStyle(ButtonStyle.Primary);
+
+        const giveawayrow = new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton);
+
         const now = moment().tz("Europe/Berlin");
         const endsIn = now.clone().add(20, 'hours');
         const timestamp = Math.floor(endsIn.valueOf() / 1000);

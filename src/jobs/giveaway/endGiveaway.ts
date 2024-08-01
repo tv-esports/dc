@@ -9,23 +9,23 @@ import UserModel from "../../models/user/user";
 import { levelRoles } from "../../functions/xp";
 
 export async function endGiveaway() {
-    const channel = await client.channels.fetch(process.env.GIVEAWAY_CHAT) as TextChannel;
-    if (!channel) return;
-
-    const guildQuery = await GuildModel.findOne({ guildID: channel.guild.id });
-    if (!guildQuery || guildQuery.xp_enabled === false) return;
-
-    const giveawayQuery = await GiveawayModel.findOne({}).sort({ createdAt: -1 });
-    if (!giveawayQuery) return;
-
-    const giveawayMessage = await channel.messages.fetch(giveawayQuery.giveawayMessageID);
-    if (!giveawayMessage) return;
-
-    const giveawayPrice = giveawayQuery.xpAmount as number;
-    const giveawayParticipants = giveawayQuery.signed_up_users as string[];
-
     // every day 20:00 PM | 0 20 * * *
     cron.schedule("0 20 * * *", async () => {
+        const channel = await client.channels.fetch(process.env.GIVEAWAY_CHAT) as TextChannel;
+        if (!channel) return;
+
+        const guildQuery = await GuildModel.findOne({ guildID: channel.guild.id });
+        if (!guildQuery || guildQuery.xp_enabled === false) return;
+
+        const giveawayQuery = await GiveawayModel.findOne({}).sort({ createdAt: -1 });
+        if (!giveawayQuery) return;
+
+        const giveawayMessage = await channel.messages.fetch(giveawayQuery.giveawayMessageID);
+        if (!giveawayMessage) return;
+
+        const giveawayPrice = giveawayQuery.xpAmount as number;
+        const giveawayParticipants = giveawayQuery.signed_up_users as string[];
+
         if (giveawayMessage && !giveawayParticipants.length) {
             giveawayMessage.delete();
             await GiveawayModel.deleteOne({ giveawayMessageID: giveawayQuery.giveawayMessageID });
@@ -71,5 +71,8 @@ export async function endGiveaway() {
         }
 
         await UserModel.updateOne({ userID: randomWinner }, { xp_points: updatedXP, xp_level: updatedLevel, updated_at: new Date() });
+    }, {
+        scheduled: true,
+        timezone: "Europe/Berlin"
     });
 }
