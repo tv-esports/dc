@@ -10,6 +10,9 @@ import { announceWeekend } from "../jobs/announceWeekend";
 import { victim } from "../jobs/victim";
 import { announceGiveaway } from "../jobs/giveaway/announceGiveaway";
 import { endGiveaway } from "../jobs/giveaway/endGiveaway";
+import { announceLottery } from "../jobs/lottery/announceLottery";
+import { closeLottery } from "../jobs/lottery/closeLottery";
+import { announceWinners } from "../jobs/lottery/announcewinner";
 
 export default class ReadyEvent extends BaseEvent {
   constructor() {
@@ -26,12 +29,18 @@ export default class ReadyEvent extends BaseEvent {
     });
     client.user.setStatus("online");
 
-    // cron jobs
+    // utils
     lootDrop();
     announceWeekend();
     victim();
 
+    // giveaway
     announceGiveaway();
     endGiveaway();
+
+    // lottery
+    announceLottery();
+    closeLottery();
+    announceWinners();
   }
 }
