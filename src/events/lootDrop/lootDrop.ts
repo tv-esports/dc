@@ -42,15 +42,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const today = new Date().getDay();
                 const checkIfItsSaturdayOrSunday = today === 6 || today === 0;
 
-                // if it isnt weekend, the users above level 10 cannot claim the loot
                 if (!checkIfItsSaturdayOrSunday && userLevel >= 30) return interaction.reply({ content: "You cannot claim above level 30 during the week.", ephemeral: true });
-
-                // const nextLevel = usersLevel + 1;
-                // const xpRequiredForNextLevel = levelRoles.find((role) => role.level === nextLevel)?.xpRequired;
-
-                // if (xpRequiredForNextLevel && usersXP >= xpRequiredForNextLevel) {
-                //     return interaction.reply({ content: "You are close to leveling up or already leveled up.", ephemeral: true });
-                // }
 
                 const embed = new EmbedBuilder()
                     .setDescription(`${interaction.user} had fast fingers and claimed the loot! 🎉`)

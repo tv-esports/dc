@@ -8,25 +8,28 @@ import UserModel from "../models/user/user";
 import { levelRoles } from "../functions/xp";
 
 export async function victim() {
-    const channel = (await client.channels.fetch(process.env.MAIN_CHAT)) as TextChannel;
-
-    if (!channel) return;
-
-    const guildQuery = await GuildModel.findOne({ guildID: channel.guild.id });
-    if (!guildQuery || guildQuery.xp_enabled === false) return;
-
     // every day at 3am
     cron.schedule("0 3 * * *", async () => {
-        const usersAbove15 = await UserModel.find({
+        const channel = (await client.channels.fetch(process.env.MAIN_CHAT)) as TextChannel;
+        if (!channel) return;
+
+        const guildQuery = await GuildModel.findOne({ guildID: channel.guild.id });
+        if (!guildQuery || guildQuery.xp_enabled === false) return;
+
+        const allUsersAbove15 = await UserModel.find({
             guildID: channel.guild.id,
-            xp_level: { $gt: 25 } // Users above level 25 can be a victim
+            xp_level: { $gt: 30 } // Users above level 30 can be a victim
         });
 
-        const usersBetween5And15 = await UserModel.find({
+        const allUsersBetween5And15 = await UserModel.find({
             guildID: channel.guild.id,
-            xp_level: { $gt: 10, $lte: 20 } // Users above level 10 and at or below level 15
+            xp_level: { $gt: 10, $lte: 25 } // Users above level 10 and at or below level 25
         });
-        
+
+        // Filter out users with the "Reaper" perk
+        const usersAbove15 = allUsersAbove15.filter(user => !user.inventory.some(item => item.name === "Reaper"));
+        const usersBetween5And15 = allUsersBetween5And15.filter(user => !user.inventory.some(item => item.name === "Reaper"));
+
         if (usersAbove15.length === 0 || usersBetween5And15.length === 0) return;
 
         const selectEmbed = new EmbedBuilder()
@@ -39,7 +42,7 @@ export async function victim() {
         setTimeout(async () => {
             await selectMsg.delete();
 
-            // Randomly select a user above level 15
+            // Randomly select a user above level 30
             const victimIndex = Math.floor(Math.random() * usersAbove15.length);
             const victim = usersAbove15[victimIndex];
 
@@ -47,7 +50,7 @@ export async function victim() {
             const victimRole = levelRoles.find((role) => role.level === newVictimLevel);
             const victimXP = victimRole ? victimRole.xpRequired : 0; // Reset XP to the minimum of the new level
 
-            // Randomly select a user below level 15
+            // Randomly select a user below level 25
             const beneficiaryIndex = Math.floor(Math.random() * usersBetween5And15.length);
             const beneficiary = usersBetween5And15[beneficiaryIndex];
 
@@ -69,7 +72,6 @@ export async function victim() {
                 { userID: beneficiary.userID },
                 { xp_level: newBeneficiaryLevel, xp_points: beneficiaryXP }
             );
-
 
             const resultEmbed = new EmbedBuilder()
                 .setDescription(`The reaper found his victim.\n\n<@${victim.userID}> almost got stabbed and therefore was downgraded to level ${newVictimLevel} with ${victimXP} XP.\n<@${beneficiary.userID}> escaped, their new level is ${newBeneficiaryLevel} with ${beneficiaryXP} XP.`)

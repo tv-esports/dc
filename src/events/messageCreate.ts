@@ -19,6 +19,8 @@ export default class MessageEvent extends BaseEvent {
     const guildQuery = await GuildModel.findOne({ guildID: message.guild.id });
     let userQuery = await UserModel.findOne({ userID: message.author.id });
 
+    const hasPremiumPerk = userQuery.inventory.some((item) => item.name === "Premium");
+
     // If userQuery is null (user not found in database), create a new user
     if (!userQuery) {
       userQuery = await UserModel.create({
@@ -38,20 +40,15 @@ export default class MessageEvent extends BaseEvent {
     if (guildQuery.ignored_xp_roles.some((role) => message.member?.roles.cache.has(role))) return;
 
     const cooldowns = new Map();
-    let cooldownTime = 10000;
+    let cooldownTime = hasPremiumPerk ? 0 : 10000;
 
     const currentTime = Date.now();
     const userCooldown = cooldowns.get(message.author.id);
 
-    const today = new Date();
-    const dayOfWeek = today.getDay(); // Returns the day of the week (0 for Sunday, 1 for Monday, ..., 6 for Saturday)
-
-    // Check if it's Saturday (6) or Sunday (0)
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-    // Calculate XP based on whether it's the weekend or not 
-    //                                  weekend * 2                  not weekend
-    let XP_TO_GIVE = isWeekend ? generateRandomXP(16, 24) : generateRandomXP(8, 12);
+    // Determine XP to give, with increased XP for Premium users
+    const isWeekend = [0, 6].includes(new Date().getDay()); // Sunday or Saturday
+    const baseXP = isWeekend ? generateRandomXP(16, 24) : generateRandomXP(8, 12);
+    const XP_TO_GIVE = hasPremiumPerk ? baseXP * 2 : baseXP; // Double XP for Premium users
 
     // User is on cooldown, ignore message
     if (userCooldown && (currentTime - userCooldown) < cooldownTime) return;

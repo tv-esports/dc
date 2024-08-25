@@ -119,8 +119,13 @@ export default new Command({
             const usersPerPage = 5;
             const startIndex = (page - 1) * usersPerPage;
         
+            // Aggregate query to exclude users with "Anonymous" perk
             const topRegularUsers = await UserModel.aggregate([
-                { $match: { xp_level: { $gte: minLevel, $lte: maxLevel }, xp_points: { $gte: minXP, $lte: maxXP } } },
+                { $match: { 
+                    xp_level: { $gte: minLevel, $lte: maxLevel },
+                    xp_points: { $gte: minXP, $lte: maxXP },
+                    "inventory.name": { $ne: "Anonymous" } // Exclude users with "Anonymous" perk
+                } },
                 { $sort: { xp_level: -1, xp_points: -1 } },
             ]);
         
