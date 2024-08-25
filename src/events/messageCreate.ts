@@ -21,7 +21,7 @@ export default class MessageEvent extends BaseEvent {
     const guildQuery = await GuildModel.findOne({ guildID: message.guild.id });
     let userQuery = await UserModel.findOne({ userID: message.author.id });
 
-    const hasPremiumPerk = userQuery.inventory.some((item) => item.name === "Premium");
+    const hasPremiumPerk = userQuery && userQuery.inventory.some((item) => item.name === "Premium");
 
     // If userQuery is null (user not found in database), create a new user
     if (!userQuery) {
