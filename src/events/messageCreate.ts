@@ -7,6 +7,8 @@ import GuildModel from "../models/guild/guild";
 
 import { generateRandomXP, levelRoles } from "../functions/xp";
 
+const cooldowns = new Map();
+
 export default class MessageEvent extends BaseEvent {
   constructor() {
     super("messageCreate");
@@ -39,8 +41,7 @@ export default class MessageEvent extends BaseEvent {
     if (guildQuery.ignored_xp_channels.includes(message.channel.id)) return;
     if (guildQuery.ignored_xp_roles.some((role) => message.member?.roles.cache.has(role))) return;
 
-    const cooldowns = new Map();
-    let cooldownTime = hasPremiumPerk ? 0 : 10000;
+    let cooldownTime = 10000;
 
     const currentTime = Date.now();
     const userCooldown = cooldowns.get(message.author.id);
