@@ -13,6 +13,7 @@ import { endGiveaway } from "../jobs/giveaway/endGiveaway";
 import { announceLottery } from "../jobs/lottery/announceLottery";
 import { closeLottery } from "../jobs/lottery/closeLottery";
 import { announceWinners } from "../jobs/lottery/announcewinner";
+import { gtn } from "../jobs/gtn";
 
 export default class ReadyEvent extends BaseEvent {
   constructor() {
@@ -37,6 +38,9 @@ export default class ReadyEvent extends BaseEvent {
     // giveaway
     announceGiveaway();
     endGiveaway();
+
+    // gtn
+    gtn();
 
     // lottery
     announceLottery();
