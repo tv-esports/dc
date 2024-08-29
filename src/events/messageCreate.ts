@@ -70,7 +70,7 @@ export default class MessageEvent extends BaseEvent {
           //   .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\``)
           //   .setTimestamp();
           // message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
-          message.react("🎉")
+          // message.react("🎉")
         }
 
         if (role && !message.member?.roles.cache.has(role.id)) {
@@ -80,7 +80,7 @@ export default class MessageEvent extends BaseEvent {
           //   .setTimestamp();
           message.member?.roles.add(role);
           // message.reply({ content: `${message.author}`, embeds: [levelUpEmbed] });
-          message.react("🎉")
+          // message.react("🎉")
         }
 
         userLevel = levelRole.level;

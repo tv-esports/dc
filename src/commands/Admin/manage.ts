@@ -6,6 +6,7 @@ import GuildModel from "../../models/guild/guild";
 import UserModel from "../../models/user/user";
 import DropModel from "../../models/xpdrop/drop";
 import VoucherModel from "../../models/voucher/xpvoucher";
+import { levelRoles } from "../../functions/xp";
 
 export default new Command({
     name: "manage",
@@ -123,6 +124,16 @@ export default new Command({
         {
             name: "view-blacklist",
             description: "View the blacklisted users",
+            type: ApplicationCommandOptionType.Subcommand
+        },
+        {
+            name: "gtn",
+            description: "Start a Guess The Number game",
+            type: ApplicationCommandOptionType.Subcommand
+        },
+        {
+            name: "reaper",
+            description: "Reap the souls of the inactive users",
             type: ApplicationCommandOptionType.Subcommand
         }
     ],
@@ -415,6 +426,134 @@ export default new Command({
             });
 
             await interaction.reply({ embeds: [embed], ephemeral: false });
+        }
+
+        if (interaction.options.getSubcommand() === "gtn") {
+            function generateUniqueRandomNumbers(correctNumber: number, min: number, max: number, count: number) {
+                const numbers = new Set<number>();
+                numbers.add(correctNumber);
+                while (numbers.size < count + 1) {
+                    const randomNumber = Math.floor(Math.random() * (max - min + 1) + min);
+                    numbers.add(randomNumber);
+                }
+                return Array.from(numbers);
+            }
+
+            const correctNumber = Math.floor(Math.random() * 100) + 1;
+            const allNumbers = generateUniqueRandomNumbers(correctNumber, 1, 100, 3);
+            const shuffledNumbers = allNumbers.sort(() => 0.5 - Math.random());
+
+            const buttons = shuffledNumbers.map((number) => new ButtonBuilder()
+                .setCustomId(`guess-${correctNumber}-${number}`)
+                .setLabel(number.toString())
+                .setStyle(ButtonStyle.Primary)
+            );
+
+            const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(buttons);
+
+            const gameEmbed = new EmbedBuilder()
+                .setTitle("🔢 Guess the Correct Number!")
+                .setDescription("Click the button with the correct number to win XP!")
+                .setColor("Random")
+                .setTimestamp();
+
+            await interaction.reply({ content: `Game started!`, ephemeral: true });
+            await interaction.channel.send({ embeds: [gameEmbed], components: [buttonRow] });
+        }
+
+        if (interaction.options.getSubcommand() === "reaper") {
+            const channel = (await client.channels.fetch(process.env.MAIN_CHAT)) as TextChannel;
+            if (!channel) return;
+
+            const guildQuery = await GuildModel.findOne({ guildID: channel.guild.id });
+            if (!guildQuery || guildQuery.xp_enabled === false) return;
+
+            const allUsersAbove15 = await UserModel.find({
+                guildID: channel.guild.id,
+                xp_level: { $gt: 30 } // Users above level 30 can be a victim
+            });
+
+            const allUsersBetween5And15 = await UserModel.find({
+                guildID: channel.guild.id,
+                xp_level: { $gt: 10, $lte: 25 } // Users above level 10 and at or below level 25
+            });
+
+            // Filter out users with the "Reaper" perk
+            const usersAbove15 = allUsersAbove15.filter(user => !user.inventory.some(item => item.name === "Reaper"));
+            const usersBetween5And15 = allUsersBetween5And15.filter(user => !user.inventory.some(item => item.name === "Reaper"));
+
+            if (usersAbove15.length === 0 || usersBetween5And15.length === 0) return;
+
+            const selectEmbed = new EmbedBuilder()
+                .setDescription("It's 3am, the time has come. I am now selecting a victim and a beneficiary for today ...")
+                .setImage("https://media4.giphy.com/media/7LzsVhXKgiGCQ/giphy.gif?cid=ecf05e47v7rbs68nfl9kspopugthqyeo3xfe63dsc3c5d5oy&ep=v1_gifs_related&rid=giphy.gif&ct=g")
+                .setColor("Red")
+
+            const selectMsg = await channel.send({ embeds: [selectEmbed] });
+
+            setTimeout(async () => {
+                await selectMsg.delete();
+
+                // Randomly select a user above level 30
+                const victimIndex = Math.floor(Math.random() * usersAbove15.length);
+                const victim = usersAbove15[victimIndex];
+
+                const newVictimLevel = Math.max(victim.xp_level - 2); // Decrease level by 2
+                const victimRole = levelRoles.find((role) => role.level === newVictimLevel);
+                const victimXP = victimRole ? victimRole.xpRequired : 0; // Reset XP to the minimum of the new level
+
+                // Randomly select a user below level 25
+                const beneficiaryIndex = Math.floor(Math.random() * usersBetween5And15.length);
+                const beneficiary = usersBetween5And15[beneficiaryIndex];
+
+                const newBeneficiaryLevel = Math.min(beneficiary.xp_level + 2); // Increase level by 2
+                const beneficiaryRole = levelRoles.find((role) => role.level === newBeneficiaryLevel);
+                const beneficiaryXP = beneficiaryRole ? beneficiaryRole.xpRequired : 0; // Set XP to the role requirement
+
+                const victimMember = channel.guild.members.cache.get(victim.userID);
+                const beneficiaryMember = channel.guild.members.cache.get(beneficiary.userID);
+
+                // Update victim's level and XP
+                await UserModel.updateOne(
+                    { userID: victim.userID },
+                    { xp_level: newVictimLevel, xp_points: victimXP }
+                );
+
+                // Update beneficiary's level and XP
+                await UserModel.updateOne(
+                    { userID: beneficiary.userID },
+                    { xp_level: newBeneficiaryLevel, xp_points: beneficiaryXP }
+                );
+
+                const resultEmbed = new EmbedBuilder()
+                    .setDescription(`The reaper found his victim.\n\n<@${victim.userID}> almost got stabbed and therefore was downgraded to level ${newVictimLevel} with ${victimXP} XP.\n<@${beneficiary.userID}> escaped, their new level is ${newBeneficiaryLevel} with ${beneficiaryXP} XP.`)
+                    .setImage("https://media3.giphy.com/media/OY9XK7PbFqkNO/giphy.gif?cid=ecf05e47m92wk56yfvvvp9o8v1wn4tllwkrvl7mlru3ckwjl&ep=v1_gifs_search&rid=giphy.gif&ct=g")
+                    .setFooter({ text: "The reaper will try it again ..." })
+                    .setColor("Red")
+
+                await channel.send({
+                    embeds: [resultEmbed]
+                });
+
+                // handling roles
+                for (const levelRole of levelRoles) {
+                    const role = channel.guild.roles.cache.find((r) => r.id === levelRole.role);
+
+                    if (victimXP >= levelRole.xpRequired && levelRole.level > newVictimLevel) {
+                        if (role && victimMember?.roles.cache.has(role.id)) {
+                            await victimMember?.roles.remove(role);
+                        }
+                    }
+
+                    if (beneficiaryXP >= levelRole.xpRequired && levelRole.level > newBeneficiaryLevel) {
+                        if (role && !beneficiaryMember?.roles.cache.has(role.id)) {
+                            await beneficiaryMember?.roles.add(role);
+                        }
+                    }
+                }
+            }, 30000); 
+
+            return interaction.reply({ content: `The reaper is on the way!`, ephemeral: true });
         }
     },
 });
