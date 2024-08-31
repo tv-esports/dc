@@ -320,6 +320,7 @@ export default new Command({
                     }
                 );
                 await interaction.reply({ content: `You bought **${itemName}**.`, ephemeral: true });
+                await interaction.channel.send({ embeds: [new EmbedBuilder().setDescription(`<@${interaction.user.id}> bought **${itemName}**.`).setColor("Green")] });
             }
         }
 
