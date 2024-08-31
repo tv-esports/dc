@@ -2,9 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from "disc
 import { ExtendedClient } from "../../structures/Client";
 import { BaseEvent } from "../../structures/Event";
 import { ExtendedButtonInteraction } from "../../typings/Command";
-
-import { levelRoles, randomGif } from "../../functions/xp";
-
+import { levelRoles } from "../../functions/xp";
 import GuildModel from "../../models/guild/guild";
 import UserModel from "../../models/user/user";
 import DropModel from "../../models/xpdrop/drop";
@@ -15,30 +13,19 @@ export default class InteractionCreateEvent extends BaseEvent {
         super("interactionCreate");
     }
 
-    /**
-     * Executes when a button interaction occurs.
-     *
-     * @param {ExtendedClient} client - The extended Discord client.
-     * @param {ExtendedButtonInteraction} interaction - The button interaction.
-     */
     async run(client: ExtendedClient, interaction: ExtendedButtonInteraction) {
         switch (interaction.customId) {
             case "loot-button": {
-                // get the users xp and level, check if he is eligible for the loot drop (not close to level up, not above level 10)
                 const userQuery = await UserModel.findOne({ userID: interaction.user.id });
-                if (!userQuery) return interaction.reply({ content: "You are not in the database, send messages first.", ephemeral: true });
-
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guildId });
-                if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: "The server disabled XPs", ephemeral: true });
 
-                // check if user is blacklisted
+                if (!userQuery) return interaction.reply({ content: "You are not in the database, send messages first.", ephemeral: true });
+                if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: "The server disabled XPs", ephemeral: true });
                 if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
 
                 const message = interaction.message;
-
                 const usersXP = userQuery.xp_points;
                 let userLevel = userQuery.xp_level;
-
                 const today = new Date().getDay();
                 const checkIfItsSaturdayOrSunday = today === 6 || today === 0;
 
@@ -56,83 +43,90 @@ export default class InteractionCreateEvent extends BaseEvent {
                     .setDisabled(true);
 
                 const lootRow = new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents(lootButton)
+                    .addComponents(lootButton);
 
                 let newXP;
-                // if its weekend and user is below level 10, give 100XP
                 if (checkIfItsSaturdayOrSunday && userLevel < 10) {
                     newXP = usersXP + 100;
-                    // if its weekend and the user is above level 10, give 50XP
                 } else if (checkIfItsSaturdayOrSunday && userLevel >= 10) {
                     newXP = usersXP + 50;
-                    // if its during week and the user is below level 10, give 50XP
                 } else if (!checkIfItsSaturdayOrSunday && userLevel < 10) {
                     newXP = usersXP + 50;
                 }
 
-                for (const levelRole of levelRoles) {
-                    if (newXP >= levelRole.xpRequired && levelRole.level > userLevel) {
-                        const role = interaction.guild.roles.cache.find((r) => r.id === levelRole.role);
-
-                        if (role && interaction.member?.roles.cache.has(role.id)) {
-                            // const levelUpEmbed = new EmbedBuilder()
-                            //     .setColor("Random")
-                            //     .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\``)
-                            //     .setImage(`${randomGif()}`)
-                            //     .setTimestamp();
-                            // await interaction.reply({ content: `${interaction.user}`, embeds: [levelUpEmbed] });
-                            await message.react("🎉");
-                        }
-
-                        if (role && !interaction.member?.roles.cache.has(role.id)) {
-                            // const levelUpEmbed = new EmbedBuilder()
-                            //     .setColor("Random")
-                            //     .setDescription(`🎉 Congratulations, you have leveled up!\nYou are now level \`${levelRole.level}\` and received the \`${role.name}\` role`)
-                            //     .setImage(`${randomGif()}`)
-                            //     .setTimestamp();
-                            await interaction.member?.roles.add(role);
-                            await message.react("🎉");
-                            // await interaction.reply({ content: `${interaction.user}`, embeds: [levelUpEmbed] });
-                        }
-
-                        userLevel = levelRole.level;
+                // Track quest progress for "Open two loot drops"
+                const lootQuest = userQuery.daily_quests.find(
+                    (quest) => quest.quest_name === "Open two loot drops" && !quest.completed
+                );
+                if (lootQuest) {
+                    lootQuest.progress += 1;
+                    if (lootQuest.progress >= lootQuest.goal) {
+                        lootQuest.completed = true;
+                        newXP += lootQuest.reward_xp;
                     }
                 }
 
-                await UserModel.updateOne({ userID: interaction.user.id }, { xp_points: newXP, xp_level: userLevel });
+                // Check if all quests are completed
+                const allQuestsCompleted = userQuery.daily_quests.every((quest) => quest.completed);
+                if (allQuestsCompleted) {
+                    const bonusXP = 150;
+                    newXP += bonusXP;
+
+                    // Determine new level with bonus XP
+                    let newLevelWithBonus = userLevel;
+                    for (const levelRole of levelRoles) {
+                        if (newXP >= levelRole.xpRequired && levelRole.level > newLevelWithBonus) {
+                            newLevelWithBonus = levelRole.level;
+                        }
+                    }
+
+                    // Add roles based on the new level
+                    const rolesToAddWithBonus = levelRoles.filter(role => role.level > userLevel && role.level <= newLevelWithBonus);
+                    const rolesToAddIDsWithBonus = rolesToAddWithBonus.map(role => role.role);
+
+                    const memberInGuild = interaction.guild.members.cache.get(interaction.user.id);
+                    if (memberInGuild) {
+                        await memberInGuild.roles.add(rolesToAddIDsWithBonus);
+                    }
+
+                    userLevel = newLevelWithBonus;
+                }
+
+                await UserModel.updateOne(
+                    { userID: interaction.user.id },
+                    { xp_points: newXP, xp_level: userLevel, daily_quests: userQuery.daily_quests }
+                );
+
                 await message.edit({ embeds: [embed], components: [lootRow] });
-                await interaction.reply({ content: "Sucessfully opened loot, congrats!", ephemeral: true });
+                await interaction.reply({ content: "Successfully opened loot, congrats!", ephemeral: true });
                 break;
             }
 
             case "risk-button": {
                 const userQuery = await UserModel.findOne({ userID: interaction.user.id });
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guild?.id });
+
                 if (!userQuery) return interaction.reply({ content: "You are not in the database, send messages first.", ephemeral: true });
                 if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: "XP is disabled in this server.", ephemeral: true });
-
-                // check if user is blacklisted
                 if (guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are not able to do that", ephemeral: true });
 
                 let userLevel = userQuery.xp_level;
                 let usersXP = userQuery.xp_points;
                 const message = interaction.message;
 
-                if (userLevel < 3) return interaction.reply({ content: "You must be at least level 5 to risk it.", ephemeral: true });
+                if (userLevel < 3) return interaction.reply({ content: "You must be at least level 3 to risk it.", ephemeral: true });
 
-                const chosenOption = Math.random() < 0.8 ? "win" : "lose"; // 80% chance to win
+                const chosenOption = Math.random() < 0.8 ? "win" : "lose";
                 let response = "";
 
                 if (chosenOption === "win") {
-                    // Handle winning the +100 XP and potential level up
                     usersXP += 100;
                     response = "You chose to risk it and won 100 XP!";
 
                     let levelUp = false;
-
                     for (const levelRole of levelRoles) {
                         if (usersXP >= levelRole.xpRequired && levelRole.level > userLevel) {
-                            const role = interaction.guild.roles.cache.find((r) => r.id === levelRole.role);
+                            const role = interaction.guild?.roles.cache.find((r) => r.id === levelRole.role);
 
                             if (role && !interaction.member?.roles.cache.has(role.id)) {
                                 userLevel = levelRole.level;
@@ -162,11 +156,10 @@ export default class InteractionCreateEvent extends BaseEvent {
 
                     await message.edit({ embeds: [winEmbed], components: [] });
                 } else {
-                    // Reset to the previous level
                     for (let i = levelRoles.length - 1; i >= 0; i--) {
                         const levelRole = levelRoles[i];
                         if (usersXP >= levelRole.xpRequired && levelRole.level < userLevel) {
-                            const role = interaction.guild.roles.cache.find((r) => r.id === levelRole.role);
+                            const role = interaction.guild?.roles.cache.find((r) => r.id === levelRole.role);
 
                             if (role && interaction.member?.roles.cache.has(role.id)) {
                                 await interaction.member?.roles.remove(role);
@@ -189,10 +182,49 @@ export default class InteractionCreateEvent extends BaseEvent {
                     await message.edit({ embeds: [loseEmbed], components: [] });
                 }
 
-                // Update user's XP and level
-                await UserModel.updateOne({ userID: interaction.user.id }, { xp_points: usersXP, xp_level: userLevel });
+                // Track quest progress for "Risk it at the lootdrop"
+                const riskQuest = userQuery.daily_quests.find(
+                    (quest) => quest.quest_name === "Risk it at the lootdrop" && !quest.completed
+                );
+                if (riskQuest) {
+                    riskQuest.progress += 1;
+                    if (riskQuest.progress >= riskQuest.goal) {
+                        riskQuest.completed = true;
+                        usersXP += riskQuest.reward_xp;
+                    }
+                }
 
-                // Respond with the chosen option and its result
+                // Check if all quests are completed
+                const allQuestsCompleted = userQuery.daily_quests.every((quest) => quest.completed);
+                if (allQuestsCompleted) {
+                    const bonusXP = 150;
+                    usersXP += bonusXP;
+
+                    // Determine new level with bonus XP
+                    let newLevelWithBonus = userLevel;
+                    for (const levelRole of levelRoles) {
+                        if (usersXP >= levelRole.xpRequired && levelRole.level > newLevelWithBonus) {
+                            newLevelWithBonus = levelRole.level;
+                        }
+                    }
+
+                    // Add roles based on the new level
+                    const rolesToAddWithBonus = levelRoles.filter(role => role.level > userLevel && role.level <= newLevelWithBonus);
+                    const rolesToAddIDsWithBonus = rolesToAddWithBonus.map(role => role.role);
+
+                    const memberInGuild = interaction.guild.members.cache.get(interaction.user.id);
+                    if (memberInGuild) {
+                        await memberInGuild.roles.add(rolesToAddIDsWithBonus);
+                    }
+
+                    userLevel = newLevelWithBonus;
+                }
+
+                await UserModel.updateOne(
+                    { userID: interaction.user.id },
+                    { xp_points: usersXP, xp_level: userLevel, daily_quests: userQuery.daily_quests }
+                );
+
                 await interaction.reply({ content: response, ephemeral: true });
                 break;
             }
@@ -200,12 +232,11 @@ export default class InteractionCreateEvent extends BaseEvent {
             case "drop-extra-xp-button": {
                 const message = interaction.message;
                 const amount = 25;
-
                 const userQuery = await UserModel.findOne({ userID: interaction.user.id });
                 const dropQuery = await DropModel.findOne({ guildID: interaction.guild.id }).sort({ inserted_at: -1 });
                 const guildQuery = await GuildModel.findOne({ guildID: interaction.guild.id });
-                if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: `XP is not active.`, ephemeral: true });
 
+                if (!guildQuery || guildQuery.xp_enabled === false) return interaction.reply({ content: `XP is not active.`, ephemeral: true });
                 if (!userQuery || guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: `You can't do that`, ephemeral: true });
 
                 const extraXPEmbed = new EmbedBuilder()
@@ -237,10 +268,10 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const message = interaction.message;
                 const xpToShare = 30;
                 const usage = 2;
-
                 const voucherCode = Math.random().toString(36).substring(7);
+
                 const shareXPEmbed = new EmbedBuilder()
-                    .setDescription(`<@${interaction.user.id}> decided to share a XP voucher with a friend\n\n\`\`\`${voucherCode}\`\`\`\nTo redeem, use \`/voucher redeem <code>\``)
+                    .setDescription(`<@${interaction.user.id}> decided to share an XP voucher with a friend\n\n\`\`\`${voucherCode}\`\`\`\nTo redeem, use \`/voucher redeem <code>\``)
                     .setColor("Random")
                     .setImage("https://paytechlaw.com/wp-content/uploads/190414_Corona-Voucher_Artenauta.png")
                     .setTimestamp()
@@ -262,6 +293,7 @@ export default class InteractionCreateEvent extends BaseEvent {
 
             case "destroy-button": {
                 const message = interaction.message;
+                const userQuery = await UserModel.findOne({ userID: interaction.user.id });
 
                 const destroyEmbed = new EmbedBuilder()
                     .setDescription(`<@${interaction.user.id}> decided to destroy the loot chest`)
@@ -269,6 +301,49 @@ export default class InteractionCreateEvent extends BaseEvent {
                     .setImage("https://www.brandonthatchers.co.uk/uploads/items/33e065a17e37cbee/14438daf0c83b3b3.jpeg?size=224&date=1660743589")
                     .setTimestamp()
                     .setFooter({ text: "R.I.P", iconURL: client.user?.displayAvatarURL() });
+
+                // Track quest progress for "Destroy one lootdrop"
+                const destroyQuest = userQuery.daily_quests.find(
+                    (quest) => quest.quest_name === "Destroy one lootdrop" && !quest.completed
+                );
+                if (destroyQuest) {
+                    destroyQuest.progress += 1;
+                    if (destroyQuest.progress >= destroyQuest.goal) {
+                        destroyQuest.completed = true;
+                        userQuery.xp_points += destroyQuest.reward_xp;
+                    }
+                }
+
+                // Check if all quests are completed
+                const allQuestsCompleted = userQuery.daily_quests.every((quest) => quest.completed);
+                if (allQuestsCompleted) {
+                    const bonusXP = 150;
+                    userQuery.xp_points += bonusXP;
+
+                    // Determine new level with bonus XP
+                    let newLevelWithBonus = userQuery.xp_level;
+                    for (const levelRole of levelRoles) {
+                        if (userQuery.xp_points >= levelRole.xpRequired && levelRole.level > newLevelWithBonus) {
+                            newLevelWithBonus = levelRole.level;
+                        }
+                    }
+
+                    // Add roles based on the new level
+                    const rolesToAddWithBonus = levelRoles.filter(role => role.level > userQuery.xp_level && role.level <= newLevelWithBonus);
+                    const rolesToAddIDsWithBonus = rolesToAddWithBonus.map(role => role.role);
+
+                    const memberInGuild = interaction.guild.members.cache.get(interaction.user.id);
+                    if (memberInGuild) {
+                        await memberInGuild.roles.add(rolesToAddIDsWithBonus);
+                    }
+
+                    userQuery.xp_level = newLevelWithBonus;
+                }
+
+                await UserModel.updateOne(
+                    { userID: interaction.user.id },
+                    { daily_quests: userQuery.daily_quests, xp_points: userQuery.xp_points, xp_level: userQuery.xp_level }
+                );
 
                 await message.edit({ embeds: [destroyEmbed], components: [] });
                 break;

@@ -38,6 +38,19 @@ class User {
   @prop({ default: [] })
   inventory: Array<{ name: string, acquiredAt: Date }>;
 
+  // quest system
+  @prop({ default: [] })
+  daily_quests: Array<{
+    quest_name: string;
+    progress: number;
+    goal: number;
+    completed: boolean;
+    reward_xp: number;
+  }>;
+
+  @prop()
+  quest_reset_at: number;
+
   @prop()
   inserted_at: Date;
 

@@ -215,7 +215,6 @@ export default new Command({
                 Total levels in database: ${totalAmountOfLevel}
                 Total XP in database: ${totalAmountOfXP}
                 Users in database: ${userCount}
-                Root Server Expire Date: 8/20/2024
             `;
 
             const embed = new EmbedBuilder()

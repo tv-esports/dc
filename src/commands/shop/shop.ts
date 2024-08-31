@@ -6,6 +6,7 @@ import { ownerCheck } from "../../guards/owner";
 import { isAdmin, isOwner } from "../../guards/permissions";
 import UserModel from "../../models/user/user";
 import { levelRoles } from "../../functions/xp";
+import { LogLevel } from "env";
 
 export default new Command({
     name: "shop",
@@ -190,32 +191,20 @@ export default new Command({
 
             if (!userQuery) return interaction.reply({ content: "User data not found. Please send messages first.", ephemeral: true });
 
-            let shop = await ShopModel.findOne();
-            if (!shop) {
-                shop = new ShopModel();
-                await shop.save();
-            }
-
             const item = shop.items.find(i => i.name === itemName);
             if (!item) return interaction.reply({ content: `Item **${itemName}** not found in the shop.`, ephemeral: true });
 
-            const xpRequired = item.price; // Assuming price is used as XP cost
+            const xpRequired = item.price;
             if (userQuery.xp_points < xpRequired) return interaction.reply({ content: `You don't have enough XP to buy **${itemName}**.`, ephemeral: true });
 
             if (userQuery.inventory.some(i => i.name === itemName)) return interaction.reply({ content: `You already own **${itemName}**.`, ephemeral: true });
 
-            // Check item availability
             if (item.available === 0) return interaction.reply({ content: `**${itemName}** is out of stock.`, ephemeral: true });
 
-            // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
             if (item.name === "Badge") {
                 const availableBadges = ["Silver", "Krypton", "Gold", "Carbon", "Platin", "Diamond"];
                 const randomBadge = availableBadges[Math.floor(Math.random() * availableBadges.length)];
-                const userHasBadge = userQuery.badges.includes(randomBadge);
-
-                // Check if the user has the badge already
-                if (!userHasBadge) {
-                    // Add badge to user's badges array
+                if (!userQuery.badges.includes(randomBadge)) {
                     await UserModel.updateOne(
                         { userID: userId },
                         {
@@ -228,11 +217,18 @@ export default new Command({
                 }
             }
 
-            // Deduct XP
             let newXP = userQuery.xp_points - xpRequired;
             let userLevel = userQuery.xp_level;
 
-            // Check if the user needs to level down
+            // Deduct XP for the item
+            await UserModel.updateOne(
+                { userID: userId },
+                {
+                    $set: { xp_points: newXP }
+                }
+            );
+
+            // Check and update level based on new XP
             let levelDown = false;
             for (const levelRole of levelRoles) {
                 if (newXP < levelRole.xpRequired && userLevel > levelRole.level) {
@@ -242,20 +238,89 @@ export default new Command({
                 }
             }
 
-            // Update user XP and level
             if (levelDown) {
-                await UserModel.updateOne({ userID: userId }, { xp_points: newXP, xp_level: userLevel });
-            } else {
-                await UserModel.updateOne({ userID: userId }, { xp_points: newXP, xp_level: userLevel, $addToSet: { inventory: { name: itemName, acquiredAt: new Date() } } });
+                await UserModel.updateOne({ userID: userId }, { xp_level: userLevel });
             }
 
-            // Update item availability
+            // Update inventory and shop stock
+            await UserModel.updateOne(
+                { userID: userId },
+                { $addToSet: { inventory: { name: itemName, acquiredAt: new Date() } } }
+            );
+
             if (item.available > 0) {
                 item.available -= 1;
-                await ShopModel.updateOne({ "items.name": itemName }, { $set: { "items.$": item } });
+                await ShopModel.updateOne({ "items.name": itemName }, { $set: { "items.$.available": item.available } });
             }
 
-            return interaction.reply({ content: `You bought **${itemName}** successfully!`, ephemeral: true });
+            // Quest tracking for "Buy an item from the shop"
+            const buyQuest = userQuery.daily_quests.find(
+                (quest) => quest.quest_name === "Buy an item from the shop" && !quest.completed
+            );
+
+            if (buyQuest) {
+                buyQuest.progress += 1;
+                if (buyQuest.progress >= buyQuest.goal) {
+                    buyQuest.completed = true;
+                    newXP += buyQuest.reward_xp;
+                }
+
+                // Update user data with quest progress
+                await UserModel.updateOne(
+                    { userID: userId },
+                    {
+                        daily_quests: userQuery.daily_quests,
+                        xp_points: newXP
+                    }
+                );
+            }
+
+            const allQuestsCompleted = userQuery.daily_quests.every((quest) => quest.completed);
+            if (allQuestsCompleted) {
+                const bonusXP = 150;
+                newXP += bonusXP;
+
+                // Determine new level with bonus XP
+                let newLevelWithBonus = userLevel;
+                for (const levelRole of levelRoles) {
+                    if (newXP >= levelRole.xpRequired && levelRole.level > newLevelWithBonus) {
+                        newLevelWithBonus = levelRole.level;
+                    }
+                }
+
+                // Add roles based on the new level
+                const rolesToAddWithBonus = levelRoles.filter(role => role.level > userLevel && role.level <= newLevelWithBonus);
+                const rolesToAddIDsWithBonus = rolesToAddWithBonus.map(role => role.role);
+
+                const memberInGuild = interaction.guild.members.cache.get(interaction.user.id);
+                if (memberInGuild) {
+                    await memberInGuild.roles.add(rolesToAddIDsWithBonus);
+                }
+
+                await UserModel.updateOne(
+                    { userID: userId },
+                    {
+                        xp_points: newXP,
+                        xp_level: newLevelWithBonus,
+                        $addToSet: { inventory: { name: itemName, acquiredAt: new Date() } }
+                    }
+                );
+
+                await interaction.reply({
+                    content: `You bought **${itemName}** and received a bonus of ${bonusXP} XP for completing all quests!`,
+                    ephemeral: true
+                });
+            } else {
+                await UserModel.updateOne(
+                    { userID: userId },
+                    {
+                        xp_points: newXP,
+                        xp_level: userLevel,
+                        $addToSet: { inventory: { name: itemName, acquiredAt: new Date() } }
+                    }
+                );
+                await interaction.reply({ content: `You bought **${itemName}**.`, ephemeral: true });
+            }
         }
 
         if (subcommand === "remove") {

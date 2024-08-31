@@ -7,7 +7,7 @@ import GuildModel from "../../models/guild/guild";
 
 export default new Command({
     name: "wof",
-    description: "Wheel of fortune!",
+    description: "Wheel of Fortune!",
     userPermissions: [PermissionFlagsBits.SendMessages],
     run: async ({ interaction, client }) => {
         const userQuery = await UserModel.findOne({ userID: interaction.user.id });
@@ -76,42 +76,62 @@ export default new Command({
             // Assign XP to the user and update their role if necessary
             usersXP += XP_TO_GIVE;
 
-            // Check if user's XP qualifies for a new level and role
-            for (const levelRole of levelRoles) {
-                if (usersXP >= levelRole.xpRequired && levelRole.level > userLevel) {
-                    const role = interaction.guild?.roles.cache.find((r) => r.id === levelRole.role);
+            // Quest tracking for "Play one WoF game"
+            const wofQuest = userQuery.daily_quests.find(
+                (quest) => quest.quest_name === "Play one wof game" && !quest.completed
+            );
 
-                    if (role && !interaction.member?.roles.cache.has(role.id)) {
-                        await interaction.member?.roles.add(role);
-                    }
+            if (wofQuest) {
+                wofQuest.progress += 1;
+                if (wofQuest.progress >= wofQuest.goal) {
+                    wofQuest.completed = true;
+                    usersXP += wofQuest.reward_xp;
 
-                    userLevel = levelRole.level;
+                    // Optional: Log that the quest is completed
+                    console.log(`User ${interaction.user.tag} completed the quest: ${wofQuest.quest_name}`);
                 }
             }
 
-            // if the user loses 
-            // for (const levelRole of levelRoles) {
-            //     if (usersXP < levelRole.xpRequired && levelRole.level < userLevel) {
-            //         const role = interaction.guild?.roles.cache.find((r) => r.id === levelRole.role);
+            // Check if all quests are completed for bonus XP
+            const allQuestsCompleted = userQuery.daily_quests.every((quest) => quest.completed);
+            if (allQuestsCompleted) {
+                const bonusXP = 150;
+                usersXP += bonusXP;
 
-            //         if (role && interaction.member?.roles.cache.has(role.id)) {
-            //             await interaction.member?.roles.remove(role);
-            //         }
 
-            //         userLevel = levelRole.level;
-            //     }
-            // }
+                // Determine if user should level up with the new XP
+                let newLevelWithBonus = userLevel;
+                for (const levelRole of levelRoles) {
+                    if (usersXP >= levelRole.xpRequired && levelRole.level > newLevelWithBonus) {
+                        newLevelWithBonus = levelRole.level;
+                    }
+                }
 
-            await UserModel.updateOne({ userID: interaction.user.id }, { xp_points: usersXP, xp_level: userLevel, updated_at: new Date() });
+                // Update user level and roles if needed
+                const rolesToAddWithBonus = levelRoles.filter(role => role.level > userLevel && role.level <= newLevelWithBonus);
+                const rolesToAddIDsWithBonus = rolesToAddWithBonus.map(role => role.role);
 
-            const resultEmbed = new EmbedBuilder()
-                .setTitle(`🎡 Wheel of Fortune Result 🎡`)
-                .setDescription(`The wheel stopped at ${colorDesc}!`)
-                //.setImage(endColor)
-                .setColor(colorDesc as ColorResolvable)
-                .setFooter({ text: resultMessage });
+                if (rolesToAddIDsWithBonus.length > 0) {
+                    const memberInGuild = interaction.guild?.members.cache.get(interaction.user.id);
+                    if (memberInGuild) {
+                        await memberInGuild.roles.add(rolesToAddIDsWithBonus);
+                    }
+                }
 
-            await message.edit({ embeds: [resultEmbed] });
+                // Update user data in the database
+                await UserModel.updateOne(
+                    { userID: interaction.user.id },
+                    { xp_points: usersXP, xp_level: newLevelWithBonus, updated_at: new Date(), daily_quests: userQuery.daily_quests }
+                );
+
+                const resultEmbed = new EmbedBuilder()
+                    .setTitle(`🎡 Wheel of Fortune Result 🎡`)
+                    .setDescription(`The wheel stopped at ${colorDesc}!`)
+                    .setColor(colorDesc as ColorResolvable)
+                    .setFooter({ text: resultMessage });
+
+                await message.edit({ embeds: [resultEmbed] });
+            }
         }, 9000);
     },
 });

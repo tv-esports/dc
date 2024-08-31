@@ -30,7 +30,7 @@ export = {
   blacklist: "<:blacklist:924717785504972821>",
   reply: "<:reply:924719399137599539>",
   users: "<:users:924718034013270096>",
-  ploading: "<a:loadee:939930541296332851>",
+  loadee: "<a:loadee:939930541296332851>",
 
   // Discord Badges
   brilliance: "<:brilliance:924725692531355679>",

@@ -14,6 +14,7 @@ import { announceLottery } from "../jobs/lottery/announceLottery";
 import { closeLottery } from "../jobs/lottery/closeLottery";
 import { announceWinners } from "../jobs/lottery/announcewinner";
 import { gtn } from "../jobs/gtn";
+import { generateDailyQuests } from "../jobs/quests/quest";
 
 export default class ReadyEvent extends BaseEvent {
   constructor() {
@@ -46,5 +47,8 @@ export default class ReadyEvent extends BaseEvent {
     announceLottery();
     closeLottery();
     announceWinners();
+
+    // quests
+    //generateDailyQuests()
   }
 }
