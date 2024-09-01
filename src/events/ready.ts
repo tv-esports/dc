@@ -49,6 +49,6 @@ export default class ReadyEvent extends BaseEvent {
     announceWinners();
 
     // quests
-    //generateDailyQuests()
+    generateDailyQuests()
   }
 }

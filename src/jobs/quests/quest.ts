@@ -15,33 +15,30 @@ const quests = [
     { quest_name: "Join the lottery", goal: 1, reward_xp: 125 }
 ];
 
-function getRandomQuests(array: Array<any>, num: number) {
-    const shuffled = array.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, num);
-}
-
 export async function generateDailyQuests() {
-    const users = await UserModel.find();
+    cron.schedule('0 0 * * *', async () => {
+        function getRandomQuests(array: Array<any>, num: number) {
+            const shuffled = array.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        }
 
-    for (const user of users) {
-        const randomQuests = getRandomQuests(quests, 3).map(quest => ({
-            ...quest,
-            progress: 0,
-            completed: false
-        }));
+        const users = await UserModel.find();
 
-        user.daily_quests = randomQuests;
-        user.quest_reset_at = Math.floor(Date.now() / 1000);
-        await user.save();
-    }
+        for (const user of users) {
+            const randomQuests = getRandomQuests(quests, 3).map(quest => ({
+                ...quest,
+                progress: 0,
+                completed: false
+            }));
 
-    console.log('Daily quests generated');
+            user.daily_quests = randomQuests;
+            user.quest_reset_at = Math.floor(Date.now() / 1000);
+            await user.save();
+        }
+
+        console.log('Daily quests generated');
+    }, {
+        scheduled: true,
+        timezone: 'Europe/Berlin'
+    });
 }
-
-// Schedule the quest generation at midnight every day
-cron.schedule('0 0 * * *', async () => {
-    await generateDailyQuests();
-}, {
-    scheduled: true,
-    timezone: 'Europe/Berlin'
-});
