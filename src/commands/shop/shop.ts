@@ -302,7 +302,6 @@ export default new Command({
                     {
                         xp_points: newXP,
                         xp_level: newLevelWithBonus,
-                        $addToSet: { inventory: { name: itemName, acquiredAt: new Date() } }
                     }
                 );
 
@@ -310,6 +309,7 @@ export default new Command({
                     content: `You bought **${itemName}** and received a bonus of ${bonusXP} XP for completing all quests!`,
                     ephemeral: true
                 });
+                await interaction.channel.send({ embeds: [new EmbedBuilder().setDescription(`<@${interaction.user.id}> bought **${itemName}**.`).setColor("Green")] });
             } else {
                 await UserModel.updateOne(
                     { userID: userId },
