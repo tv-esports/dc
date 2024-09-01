@@ -1,6 +1,5 @@
 import { ApplicationCommandOptionType, EmbedBuilder } from "discord.js";
 import { Command } from "../../structures/Command";
-
 import UserModel from "../../models/user/user";
 import VoucherModel from "../../models/voucher/xpvoucher";
 import { levelRoles } from "../../functions/xp";
@@ -38,11 +37,9 @@ export default new Command({
         }
 
         // Redeem the voucher
-        const userXP = userQuery.xp_points;
-        const userLevel = userQuery.xp_level;
         const xpToAdd = voucherData.xpAmount;
-        let newUserXP = userXP + xpToAdd;
-        let newLevel = userLevel;
+        let newUserXP = userQuery.xp_points + xpToAdd;
+        let newLevel = userQuery.xp_level;
 
         // Determine the new level after adding XP
         for (const levelRole of levelRoles) {
@@ -52,7 +49,7 @@ export default new Command({
         }
 
         // Update user roles if they have leveled up
-        const rolesToAdd = levelRoles.filter(role => role.level > userLevel && role.level <= newLevel);
+        const rolesToAdd = levelRoles.filter(role => role.level > userQuery.xp_level && role.level <= newLevel);
         const rolesToAddIDs = rolesToAdd.map(role => role.role);
         const memberInGuild = interaction.guild.members.cache.get(interaction.user.id);
 
@@ -60,71 +57,59 @@ export default new Command({
             await memberInGuild.roles.add(rolesToAddIDs);
         }
 
-        // Update user XP and level
-        await UserModel.updateOne(
-            { userID: member.id },
-            { xp_points: newUserXP, xp_level: newLevel }
-        );
-
-        // Update voucher data
-        await VoucherModel.updateOne(
-            { voucherCode: voucherCode },
-            { $inc: { usageCount: -1 }, $push: { redeemedBy: member.id } }
-        );
-
         // Track quest progress for "Redeem two vouchers"
         const redeemQuest = userQuery.daily_quests.find(
             (quest) => quest.quest_name === "Redeem two vouchers" && !quest.completed
         );
+
         if (redeemQuest) {
             redeemQuest.progress += 1;
+
             if (redeemQuest.progress >= redeemQuest.goal) {
                 redeemQuest.completed = true;
                 newUserXP += redeemQuest.reward_xp; // Add quest reward XP
-                // Recalculate XP and Level
-                // Recalculate XP and Level with quest reward
-                let newXPWithQuestReward = newUserXP;
-                let newLevelWithQuestReward = newLevel;
 
+                // Recalculate XP and Level with quest reward
                 for (const levelRole of levelRoles) {
-                    if (newXPWithQuestReward >= levelRole.xpRequired && levelRole.level > newLevelWithQuestReward) {
-                        newLevelWithQuestReward = levelRole.level;
+                    if (newUserXP >= levelRole.xpRequired && levelRole.level > newLevel) {
+                        newLevel = levelRole.level;
                     }
                 }
 
-                // Update user roles if they have leveled up
-                const rolesToAddWithQuest = levelRoles.filter(role => role.level > newLevel && role.level <= newLevelWithQuestReward);
+                // Update user roles if they have leveled up with quest reward
+                const rolesToAddWithQuest = levelRoles.filter(role => role.level > userQuery.xp_level && role.level <= newLevel);
                 const rolesToAddIDsWithQuest = rolesToAddWithQuest.map(role => role.role);
 
                 if (memberInGuild) {
                     await memberInGuild.roles.add(rolesToAddIDsWithQuest);
                 }
-
-                await UserModel.updateOne(
-                    { userID: member.id },
-                    { xp_points: newXPWithQuestReward, xp_level: newLevelWithQuestReward }
-                );
-
-                await interaction.reply({
-                    content: `Successfully redeemed the voucher! You have received ${voucherData.xpAmount} XP! You also completed a quest and received an additional ${redeemQuest.reward_xp} XP!`,
-                    ephemeral: true
-                });
-            } else {
-                await UserModel.updateOne(
-                    { userID: member.id },
-                    { xp_points: newUserXP, xp_level: newLevel }
-                );
-
-                await interaction.reply({
-                    content: `Successfully redeemed the voucher! You have received ${voucherData.xpAmount} XP!`,
-                    ephemeral: true
-                });
             }
-        } else {
-            await interaction.reply({
-                content: `Successfully redeemed the voucher! You have received ${voucherData.xpAmount} XP!`,
-                ephemeral: true
-            });
+        }
+
+        // Update user data
+        try {
+            await UserModel.updateOne(
+                { userID: member.id },
+                {
+                    xp_points: newUserXP,
+                    xp_level: newLevel,
+                    daily_quests: userQuery.daily_quests,
+                    updated_at: new Date() // Update the `updated_at` field
+                }
+            );
+            console.log("User data updated successfully.");
+        } catch (error) {
+            console.error("Error updating user data:", error);
+        }
+
+        // Update voucher data
+        try {
+            await VoucherModel.updateOne(
+                { voucherCode: voucherCode },
+                { $inc: { usageCount: -1 }, $push: { redeemedBy: member.id } }
+            );
+        } catch (error) {
+            console.error("Error updating voucher data:", error);
         }
 
         // Check if all quests are completed
@@ -135,14 +120,13 @@ export default new Command({
 
             // Recalculate XP and Level with the bonus XP
             let newLevelWithBonus = newLevel;
-
             for (const levelRole of levelRoles) {
                 if (newUserXP >= levelRole.xpRequired && levelRole.level > newLevelWithBonus) {
                     newLevelWithBonus = levelRole.level;
                 }
             }
 
-            // Update user roles if they have leveled up
+            // Update user roles if they have leveled up with bonus XP
             const rolesToAddWithBonus = levelRoles.filter(role => role.level > newLevel && role.level <= newLevelWithBonus);
             const rolesToAddIDsWithBonus = rolesToAddWithBonus.map(role => role.role);
 
@@ -150,15 +134,24 @@ export default new Command({
                 await memberInGuild.roles.add(rolesToAddIDsWithBonus);
             }
 
-            await UserModel.updateOne(
-                { userID: member.id },
-                { xp_points: newUserXP, xp_level: newLevelWithBonus }
-            );
-
-            // await interaction.followUp({
-            //     content: `Congratulations! All your quests are completed! You have received a bonus of ${bonusXP} XP!`,
-            //     ephemeral: true
-            // });
+            try {
+                await UserModel.updateOne(
+                    { userID: member.id },
+                    {
+                        xp_points: newUserXP,
+                        xp_level: newLevelWithBonus,
+                        updated_at: new Date() // Ensure updated_at is set
+                    }
+                );
+                console.log("User data updated successfully with bonus XP.");
+            } catch (error) {
+                console.error("Error updating user data with bonus XP:", error);
+            }
+        } else {
+            await interaction.reply({
+                content: `Successfully redeemed the voucher! You have received ${voucherData.xpAmount} XP!`,
+                ephemeral: true
+            });
         }
     }
 });
