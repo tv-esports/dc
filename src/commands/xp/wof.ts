@@ -1,7 +1,6 @@
 import { ColorResolvable, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import { Command } from "../../structures/Command";
 import { levelRoles } from "../../functions/xp";
-
 import UserModel from "../../models/user/user";
 import GuildModel from "../../models/guild/guild";
 
@@ -12,6 +11,7 @@ export default new Command({
     run: async ({ interaction, client }) => {
         const userQuery = await UserModel.findOne({ userID: interaction.user.id });
         const guildQuery = await GuildModel.findOne({ guildID: interaction.guild?.id });
+
         if (!userQuery) return interaction.reply({ content: "You are not in the database yet, send messages first!", ephemeral: true });
         if (guildQuery.xp_enabled === false) return interaction.reply({ content: "You are not able to do that!", ephemeral: true });
 
@@ -20,7 +20,6 @@ export default new Command({
         const now = Date.now();
 
         if (now - lastUsed < cooldownTime) {
-            // Calculate remaining cooldown time
             const timeLeft = cooldownTime - (now - lastUsed);
             const hours = Math.floor(timeLeft / (1000 * 60 * 60));
             const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
@@ -32,7 +31,6 @@ export default new Command({
             });
         }
 
-        // Proceed with the command as the cooldown has passed
         const red = "https://cdn.discordapp.com/attachments/930931951005736990/1021451941403959358/Red.gif";
         const blue = "https://cdn.discordapp.com/attachments/930931951005736990/1021451954418888724/Blue.gif";
         const green = "https://cdn.discordapp.com/attachments/930931951005736990/1021451971514859520/Green.gif";
@@ -54,12 +52,10 @@ export default new Command({
 
         const message = await interaction.reply({ embeds: [colorEmbed], fetchReply: true });
 
-        // Wait for a short duration (e.g., 9 seconds) before revealing the result
         setTimeout(async () => {
             let colorDesc = "";
             let XP_TO_GIVE = 0;
 
-            // Determine XP and description based on the resulting color
             if (endColor === red) {
                 colorDesc = "Red";
                 XP_TO_GIVE = 100;
@@ -78,20 +74,25 @@ export default new Command({
                 resultMessage = "You won 40 XP!";
             }
 
+            // Add the XP to the user's total
             usersXP += XP_TO_GIVE;
 
-            // Quest tracking for "Play one WoF game"
+            // Quest tracking for "Play one wof game"
             const wofQuest = userQuery.daily_quests.find(
                 (quest) => quest.quest_name === "Play one wof game" && !quest.completed
             );
 
             if (wofQuest) {
                 wofQuest.progress += 1;
+
+                // Debugging: Log the progress and quest status
+                console.log(`Quest progress: ${wofQuest.progress}/${wofQuest.goal}`);
+                console.log(`Is quest completed? ${wofQuest.completed}`);
+
                 if (wofQuest.progress >= wofQuest.goal) {
                     wofQuest.completed = true;
                     usersXP += wofQuest.reward_xp;
 
-                    // Optional: Log that the quest is completed
                     console.log(`User ${interaction.user.tag} completed the quest: ${wofQuest.quest_name}`);
                 }
             }
@@ -101,35 +102,33 @@ export default new Command({
             if (allQuestsCompleted) {
                 const bonusXP = 150;
                 usersXP += bonusXP;
+
+                console.log(`User ${interaction.user.tag} has completed all daily quests and earned bonus XP.`);
+
+                // Update user level based on new XP after bonus
+                for (const levelRole of levelRoles) {
+                    if (usersXP >= levelRole.xpRequired && levelRole.level > userLevel) {
+                        userLevel = levelRole.level;
+                    }
+                }
             }
 
-            // Determine if user should level up with the new XP
-            let newLevel = userLevel;
+            // Assign new XP and level if necessary
             for (const levelRole of levelRoles) {
-                if (usersXP >= levelRole.xpRequired && levelRole.level > newLevel) {
-                    newLevel = levelRole.level;
+                if (usersXP >= levelRole.xpRequired && levelRole.level > userLevel) {
+                    userLevel = levelRole.level;
                 }
             }
 
-            // Update user level and roles if needed
-            const rolesToAdd = levelRoles.filter(role => role.level > userLevel && role.level <= newLevel);
-            const rolesToAddIDs = rolesToAdd.map(role => role.role);
+            await userQuery.updateOne({
+                xp_points: usersXP,
+                xp_level: userLevel,
+                updated_at: new Date(),
+                daily_quests: userQuery.daily_quests
+            });
+            
 
-            if (rolesToAddIDs.length > 0) {
-                const memberInGuild = interaction.guild?.members.cache.get(interaction.user.id);
-                if (memberInGuild) {
-                    await memberInGuild.roles.add(rolesToAddIDs);
-                }
-            }
-
-            // Update user data in the database, including cooldown time
-            userQuery.xp_points = usersXP;
-            userQuery.xp_level = newLevel;
-            userQuery.updated_at = new Date();
-            userQuery.daily_quests = userQuery.daily_quests; // Make sure to set this even if no quests were updated
-
-            await userQuery.save(); // Save all changes to the user
-
+            // Send the final result message
             const resultEmbed = new EmbedBuilder()
                 .setTitle(`🎡 Wheel of Fortune Result 🎡`)
                 .setDescription(`The wheel stopped at ${colorDesc}!`)

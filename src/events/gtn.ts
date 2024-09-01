@@ -36,11 +36,26 @@ export default class InteractionCreateEvent extends BaseEvent {
 
             if (guessNumberQuest) {
                 guessNumberQuest.progress += 1;
+
+                // Log the progress and quest status
+                console.log(`Quest progress: ${guessNumberQuest.progress}/${guessNumberQuest.goal}`);
+
                 if (guessNumberQuest.progress >= guessNumberQuest.goal) {
                     guessNumberQuest.completed = true;
                     usersXP += guessNumberQuest.reward_xp;
+                    console.log(`User ${interaction.user.tag} completed the quest: ${guessNumberQuest.quest_name}`);
                 }
+
+                // Log the updated quest status after checking completion
+                console.log(`[Quest Updated] Is quest completed? ${guessNumberQuest.completed}`);
             }
+
+            await userQuery.updateOne({
+                xp_points: usersXP,
+                xp_level: userLevel,
+                updated_at: new Date(),
+                daily_quests: userQuery.daily_quests
+            });
 
             // Check if all quests are completed
             const allQuestsCompleted = userQuery.daily_quests.every((quest) => quest.completed);
@@ -64,12 +79,6 @@ export default class InteractionCreateEvent extends BaseEvent {
                 if (memberInGuild) {
                     await memberInGuild.roles.add(rolesToAddIDsWithBonus);
                 }
-
-                // Update user data with bonus XP and new level
-                await UserModel.updateOne(
-                    { userID: interaction.user.id },
-                    { xp_points: usersXP, xp_level: newLevelWithBonus, daily_quests: userQuery.daily_quests }
-                );
 
                 // Send response for bonus XP
                 await interaction.reply({
@@ -111,11 +120,12 @@ export default class InteractionCreateEvent extends BaseEvent {
                     }
                 }
 
-                // Update user data with regular XP and level
-                await UserModel.updateOne(
-                    { userID: interaction.user.id },
-                    { xp_points: usersXP, xp_level: newLevel, daily_quests: userQuery.daily_quests }
-                );
+                await userQuery.updateOne({
+                    xp_points: usersXP,
+                    xp_level: newLevel,
+                    updated_at: new Date(),
+                    daily_quests: userQuery.daily_quests
+                });
 
                 // Create and send a congratulatory embed
                 const embed = new EmbedBuilder()
