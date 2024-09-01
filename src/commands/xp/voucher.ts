@@ -94,7 +94,6 @@ export default new Command({
                     xp_points: newUserXP,
                     xp_level: newLevel,
                     daily_quests: userQuery.daily_quests,
-                    updated_at: new Date() // Update the `updated_at` field
                 }
             );
             console.log("User data updated successfully.");
@@ -140,7 +139,6 @@ export default new Command({
                     {
                         xp_points: newUserXP,
                         xp_level: newLevelWithBonus,
-                        updated_at: new Date() // Ensure updated_at is set
                     }
                 );
                 console.log("User data updated successfully with bonus XP.");
