@@ -59,25 +59,38 @@ export default class InteractionCreateEvent extends BaseEvent {
                 const userXPQuery = await UserModel.findOne({ userID: interaction.user.id });
 
                 const numbersBetFormat = validateLotteryNumbers(numbersBet);
-                // if format is wrong
-                if (!numbersBetFormat) return interaction.reply({ content: "Invalid numbers format! Enter three numbers between 1 and 100 separated with a comma, that is in total 100 or below.\nExample: \`10, 12, 24\` = 46 (must be below 100)", ephemeral: true });
-                // if user has not enough XP or havent sent any message yet
-                if (!userXPQuery || userXPQuery.xp_points < rawXPBet) return interaction.reply({ content: "You don't have enough XP to enter the lottery.", ephemeral: true });
-                // if guild has no data, disabled xp or user is blacklisted
-                if (!guildQuery || guildQuery.xp_enabled === false || guildQuery.blacklisted_xp_users.includes(interaction.user.id)) return interaction.reply({ content: "You are unable to do this.", ephemeral: true });
 
-                // check if the user already entered the lottery
+                // Check if numbers format is valid
+                if (!numbersBetFormat) {
+                    return interaction.reply({
+                        content: "Invalid numbers format! Enter three numbers between 1 and 100 separated with a comma, that is in total 100 or below.\nExample: `10, 12, 24` = 46 (must be below 100)",
+                        ephemeral: true
+                    });
+                }
+
+                // Check if user has enough XP or hasn't sent any messages yet
+                if (!userXPQuery || userXPQuery.xp_points < rawXPBet) {
+                    return interaction.reply({ content: "You don't have enough XP to enter the lottery.", ephemeral: true });
+                }
+
+                // Check if guild has no data, XP is disabled, or user is blacklisted
+                if (!guildQuery || guildQuery.xp_enabled === false || guildQuery.blacklisted_xp_users.includes(interaction.user.id)) {
+                    return interaction.reply({ content: "You are unable to do this.", ephemeral: true });
+                }
+
+                // Check if the user already entered the lottery
                 const lotteryBets = latestLotteryQuery.lotteryBets;
-
                 const userAlreadyEntered = lotteryBets.some((bet) => bet.userID === interaction.user.id);
 
-                if (userAlreadyEntered) return interaction.reply({ content: "You have already entered the lottery.", ephemeral: true });
+                if (userAlreadyEntered) {
+                    return interaction.reply({ content: "You have already entered the lottery.", ephemeral: true });
+                }
 
-                // Check if the new XP would result in a level down
+                // Deduct XP and update user's level if necessary
                 let newUserXP = userXPQuery.xp_points - rawXPBet;
                 const newLevel = levelRoles.reverse().find((role) => newUserXP >= role.xpRequired)?.level || 0;
 
-                // Remove roles for level down
+                // Remove roles if user levels down
                 if (newLevel < userXPQuery.xp_level) {
                     const rolesToRemove = levelRoles.filter(role => role.level > newLevel && role.level <= userXPQuery.xp_level);
                     const rolesToRemoveIDs = rolesToRemove.map(role => role.role);
@@ -90,7 +103,7 @@ export default class InteractionCreateEvent extends BaseEvent {
 
                 await UserModel.findOneAndUpdate({ userID: interaction.user.id }, { xp_points: newUserXP, xp_level: newLevel });
 
-                // add the user to the lotteryBets and increase the lotteryPot
+                // Add the user to the lottery bets and increase the lottery pot
                 const updatedLottery = {
                     userID: interaction.user.id,
                     betAmount: xpBet,
@@ -102,7 +115,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                     { $push: { lotteryBets: updatedLottery }, $inc: { lotteryPot: rawXPBet }, $set: { updated_at: new Date() } }
                 );
 
-                // edit the lottery message
+                // Edit the lottery message to update the pot
                 const channel = (await client.channels.fetch(
                     process.env.LOTTERY_CHAT
                 )) as TextChannel;
@@ -113,7 +126,6 @@ export default class InteractionCreateEvent extends BaseEvent {
                 if (!channel || !message) return;
 
                 const endsIn = latestLotteryQuery.endsIn;
-
                 const actualLotteryPotFormat = actualLotteryPot.toLocaleString();
 
                 const embed = new EmbedBuilder()
@@ -121,7 +133,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                     .setColor("Random")
                     .addFields(
                         {
-                            name: "Price Pool 🎁",
+                            name: "Prize Pool 🎁",
                             value: `${actualLotteryPotFormat} XP`
                         },
                         {
@@ -132,12 +144,83 @@ export default class InteractionCreateEvent extends BaseEvent {
                     .setImage("https://anchor-precisiongroup-uat-web.s3.ap-southeast-2.amazonaws.com/prancentral/media/blogs/4-benefits-of-playing-the-lottery.jpg?ext=.jpg")
                     .setFooter({ text: "Play carefully.", iconURL: client.user?.displayAvatarURL() });
 
-
-
                 await message.edit({ embeds: [embed] });
 
-                interaction.reply({ content: `Successfully entered lottery.\nBet: ${rawXPBet}XP and your numbers: ${numbersBet}`, ephemeral: true });
+                // Quest tracking for "Join the lottery"
+                const joinLotteryQuest = userXPQuery.daily_quests.find(
+                    (quest) => quest.quest_name === "Join the lottery" && !quest.completed
+                );
+
+                if (joinLotteryQuest) {
+                    joinLotteryQuest.progress += 1;
+                    if (joinLotteryQuest.progress >= joinLotteryQuest.goal) {
+                        joinLotteryQuest.completed = true;
+                        newUserXP += joinLotteryQuest.reward_xp;
+                    }
+
+                    // Update user data with quest progress
+                    await UserModel.updateOne(
+                        { userID: interaction.user.id },
+                        {
+                            daily_quests: userXPQuery.daily_quests,
+                            xp_points: newUserXP
+                        }
+                    );
+                }
+
+                // Check if all daily quests are completed
+                const allQuestsCompleted = userXPQuery.daily_quests.every((quest) => quest.completed);
+
+                if (allQuestsCompleted) {
+                    const bonusXP = 150;
+                    newUserXP += bonusXP;
+
+                    // Determine new level with bonus XP
+                    let newLevelWithBonus = newLevel;
+                    for (const levelRole of levelRoles) {
+                        if (newUserXP >= levelRole.xpRequired && levelRole.level > newLevelWithBonus) {
+                            newLevelWithBonus = levelRole.level;
+                        }
+                    }
+
+                    // Add roles based on the new level
+                    const rolesToAddWithBonus = levelRoles.filter(role => role.level > newLevel && role.level <= newLevelWithBonus);
+                    const rolesToAddIDsWithBonus = rolesToAddWithBonus.map(role => role.role);
+
+                    const memberInGuild = interaction.guild.members.cache.get(interaction.user.id);
+                    if (memberInGuild) {
+                        await memberInGuild.roles.add(rolesToAddIDsWithBonus);
+                    }
+
+                    // Update user's XP and level with bonus XP and new level
+                    await UserModel.updateOne(
+                        { userID: interaction.user.id },
+                        {
+                            xp_points: newUserXP,
+                            xp_level: newLevelWithBonus
+                        }
+                    );
+
+                    await interaction.reply({
+                        content: `You joined the lottery and completed all quests! You received a bonus of ${bonusXP} XP.`,
+                        ephemeral: true
+                    });
+                } else {
+                    // Update user's XP and level without bonus
+                    await UserModel.updateOne(
+                        { userID: interaction.user.id },
+                        {
+                            xp_points: newUserXP,
+                            xp_level: newLevel
+                        }
+                    );
+
+                    await interaction.reply({
+                        content: `Successfully entered the lottery.\nBet: ${rawXPBet} XP and your numbers: ${numbersBet}`,
+                        ephemeral: true
+                    });
+                }
             }
         }
     }
-}
+}    

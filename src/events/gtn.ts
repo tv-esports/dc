@@ -53,7 +53,7 @@ export default class InteractionCreateEvent extends BaseEvent {
             await userQuery.updateOne({
                 xp_points: usersXP,
                 xp_level: userLevel,
-                updated_at: new Date(),
+            //    updated_at: new Date(),
                 daily_quests: userQuery.daily_quests
             });
 
@@ -123,7 +123,7 @@ export default class InteractionCreateEvent extends BaseEvent {
                 await userQuery.updateOne({
                     xp_points: usersXP,
                     xp_level: newLevel,
-                    updated_at: new Date(),
+                //    updated_at: new Date(),
                     daily_quests: userQuery.daily_quests
                 });
 
